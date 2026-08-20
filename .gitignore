@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+local.properties
+
+# Keep the wrapper jar out until it's been generated/verified locally —
+# see README.md for how to materialize it.
+gradle/wrapper/gradle-wrapper.jar
