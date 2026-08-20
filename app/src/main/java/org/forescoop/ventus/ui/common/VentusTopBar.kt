@@ -1,0 +1,114 @@
+//
+//  VentusTopBar.kt
+//  Ventus
+//
+//  Created by Javier Fuchs on 2026-08-20.
+//  Copyright © 2026 Mobile Patagonia. All rights reserved.
+//
+
+package org.forescoop.ventus.ui.common
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun VentusTopBar(
+    onNavigateToDashboard: () -> Unit,
+    onNavigateToGrid: () -> Unit,
+    onNavigateToGraph: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    isFavorite: Boolean
+) {
+    var showMenu by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box {
+                IconButton(
+                    onClick = { showMenu = true },
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                ) {
+                    Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Forecast Grid") },
+                        onClick = { showMenu = false; onNavigateToGrid() },
+                        leadingIcon = { Icon(Icons.Default.TableChart, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Forecast Graph") },
+                        onClick = { showMenu = false; onNavigateToGraph() },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Overview") },
+                        onClick = { showMenu = false; onNavigateToDashboard() },
+                        leadingIcon = { Icon(Icons.Default.Dashboard, contentDescription = null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Settings") },
+                        onClick = { showMenu = false; onNavigateToSettings() },
+                        leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Help") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("About") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Login") },
+                        onClick = { showMenu = false },
+                        leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = onNavigateToSearch,
+                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+            ) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            IconButton(
+                onClick = onToggleFavorite,
+                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) Color.Yellow else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}

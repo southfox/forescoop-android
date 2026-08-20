@@ -39,8 +39,19 @@ class MainActivity : ComponentActivity() {
                     composable("dashboard") {
                         DashboardScreen(
                             viewModel = dashboardViewModel,
+                            onNavigateToDashboard = {
+                                if (navController.currentDestination?.route != "dashboard") {
+                                    navController.navigate("dashboard") {
+                                        popUpTo("dashboard") { inclusive = true }
+                                    }
+                                }
+                            },
                             onNavigateToGrid = {
-                                navController.navigate("grid")
+                                navController.navigate("grid") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             },
                             onNavigateToSettings = {
                                 navController.navigate("settings")
@@ -49,15 +60,41 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("search")
                             },
                             onNavigateToGraph = {
-                                navController.navigate("graph")
+                                navController.navigate("graph") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         )
                     }
                     composable("grid") {
                         val state by dashboardViewModel.uiState.collectAsState()
                         if (state is DashboardUiState.Success) {
+                            val success = state as DashboardUiState.Success
                             ForecastGridScreen(
-                                spotForecast = (state as DashboardUiState.Success).spotForecast,
+                                spotForecast = success.spotForecast,
+                                onNavigateToDashboard = {
+                                    navController.navigate("dashboard") {
+                                        popUpTo("dashboard") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToGrid = {},
+                                onNavigateToGraph = {
+                                    navController.navigate("graph") {
+                                        popUpTo("dashboard") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                },
+                                onNavigateToSearch = {
+                                    navController.navigate("search")
+                                },
+                                onToggleFavorite = { dashboardViewModel.toggleFavorite() },
+                                isFavorite = success.isFavorite,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }
@@ -85,8 +122,30 @@ class MainActivity : ComponentActivity() {
                     composable("graph") {
                         val state by dashboardViewModel.uiState.collectAsState()
                         if (state is DashboardUiState.Success) {
+                            val success = state as DashboardUiState.Success
                             ForecastGraphScreen(
-                                spotForecast = (state as DashboardUiState.Success).spotForecast,
+                                spotForecast = success.spotForecast,
+                                onNavigateToDashboard = {
+                                    navController.navigate("dashboard") {
+                                        popUpTo("dashboard") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToGrid = {
+                                    navController.navigate("grid") {
+                                        popUpTo("dashboard") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToGraph = {},
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                },
+                                onNavigateToSearch = {
+                                    navController.navigate("search")
+                                },
+                                onToggleFavorite = { dashboardViewModel.toggleFavorite() },
+                                isFavorite = success.isFavorite,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

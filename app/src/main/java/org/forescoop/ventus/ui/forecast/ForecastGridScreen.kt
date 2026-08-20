@@ -33,11 +33,19 @@ import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WeatherColorScale
 import org.forescoop.ventus.ui.common.WindSpeedUnit
 
-@OptIn(ExperimentalMaterial3Api::class)
+import org.forescoop.ventus.ui.common.*
+
 @Composable
 fun ForecastGridScreen(
     spotForecast: SpotForecast,
     viewModel: ForecastGridViewModel = viewModel(),
+    onNavigateToDashboard: () -> Unit,
+    onNavigateToGrid: () -> Unit,
+    onNavigateToGraph: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    isFavorite: Boolean,
     onNavigateBack: () -> Unit
 ) {
     val forecast = spotForecast.forecast ?: return
@@ -45,19 +53,37 @@ fun ForecastGridScreen(
     val windUnit by viewModel.windUnit.collectAsState()
     val tempUnit by viewModel.tempUnit.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(spotForecast.displayName) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            VentusTopBar(
+                onNavigateToDashboard = onNavigateToDashboard,
+                onNavigateToGrid = onNavigateToGrid,
+                onNavigateToGraph = onNavigateToGraph,
+                onNavigateToSettings = onNavigateToSettings,
+                onNavigateToSearch = onNavigateToSearch,
+                onToggleFavorite = onToggleFavorite,
+                isFavorite = isFavorite
             )
-        }
-    ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = spotForecast.displayName,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                if (!spotForecast.spot.isNullOrEmpty()) {
+                    Text(
+                        text = spotForecast.spot!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(modifier = Modifier.fillMaxSize()) {
                 // Row Labels
                 Column(

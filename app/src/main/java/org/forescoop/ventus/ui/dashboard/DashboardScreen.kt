@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -30,19 +29,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.data.model.SpotForecast
-import org.forescoop.ventus.ui.common.AnimatedWeatherBackground
-import org.forescoop.ventus.ui.common.Knots
-import org.forescoop.ventus.ui.common.TemperatureUnit
-import org.forescoop.ventus.ui.common.WeatherBackgroundCondition
-import org.forescoop.ventus.ui.common.WindSpeedUnit
+import org.forescoop.ventus.ui.common.*
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
+    onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
+    onNavigateToGraph: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToSearch: () -> Unit,
-    onNavigateToGraph: () -> Unit
+    onNavigateToSearch: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -65,56 +61,15 @@ fun DashboardScreen(
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IconButton(
-                                    onClick = onNavigateToSettings,
-                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                                ) {
-                                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-
-                                IconButton(
-                                    onClick = onNavigateToSearch,
-                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                                ) {
-                                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-
-                                IconButton(
-                                    onClick = { viewModel.toggleFavorite() },
-                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                                ) {
-                                    Icon(
-                                        imageVector = if (state.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                                        contentDescription = "Favorite",
-                                        tint = if (state.isFavorite) Color.Yellow else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                IconButton(
-                                    onClick = onNavigateToGraph,
-                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                                ) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.ShowChart, contentDescription = "Show Graph", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-
-                                Button(
-                                    onClick = onNavigateToGrid,
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                                ) {
-                                    Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        }
+                        VentusTopBar(
+                            onNavigateToDashboard = onNavigateToDashboard,
+                            onNavigateToGrid = onNavigateToGrid,
+                            onNavigateToGraph = onNavigateToGraph,
+                            onNavigateToSettings = onNavigateToSettings,
+                            onNavigateToSearch = onNavigateToSearch,
+                            onToggleFavorite = { viewModel.toggleFavorite() },
+                            isFavorite = state.isFavorite
+                        )
                         
                         DashboardContent(state.spotForecast, state.windUnit, state.tempUnit, onNavigateToSearch)
                         
