@@ -27,6 +27,7 @@ fun VentusTopBar(
     onNavigateToGraph: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     onToggleFavorite: () -> Unit,
     isFavorite: Boolean
 ) {
@@ -86,7 +87,7 @@ fun VentusTopBar(
                     HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Login") },
-                        onClick = { showMenu = false },
+                        onClick = { showMenu = false; onNavigateToLogin() },
                         leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
                     )
                 }

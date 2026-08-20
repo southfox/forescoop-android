@@ -38,7 +38,8 @@ fun DashboardScreen(
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,6 +68,7 @@ fun DashboardScreen(
                             onNavigateToGraph = onNavigateToGraph,
                             onNavigateToSettings = onNavigateToSettings,
                             onNavigateToSearch = onNavigateToSearch,
+                            onNavigateToLogin = onNavigateToLogin,
                             onToggleFavorite = { viewModel.toggleFavorite() },
                             isFavorite = state.isFavorite
                         )

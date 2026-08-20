@@ -25,6 +25,7 @@ import org.forescoop.ventus.ui.dashboard.DashboardUiState
 import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
 import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
+import org.forescoop.ventus.ui.login.LoginScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +66,9 @@ class MainActivity : ComponentActivity() {
                                     launchSingleTop = true
                                     restoreState = true
                                 }
+                            },
+                            onNavigateToLogin = {
+                                navController.navigate("login")
                             }
                         )
                     }
@@ -93,6 +97,9 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToSearch = {
                                     navController.navigate("search")
                                 },
+                                onNavigateToLogin = {
+                                    navController.navigate("login")
+                                },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
                                 isFavorite = success.isFavorite,
                                 onNavigateBack = {
@@ -114,6 +121,13 @@ class MainActivity : ComponentActivity() {
                                 dashboardViewModel.loadForecast(spotId)
                                 navController.popBackStack()
                             },
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+                    composable("login") {
+                        LoginScreen(
                             onNavigateBack = {
                                 navController.popBackStack()
                             }
@@ -143,6 +157,9 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToSearch = {
                                     navController.navigate("search")
+                                },
+                                onNavigateToLogin = {
+                                    navController.navigate("login")
                                 },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
                                 isFavorite = success.isFavorite,

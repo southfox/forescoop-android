@@ -51,6 +51,7 @@ fun ForecastGraphScreen(
     onNavigateToGraph: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     onToggleFavorite: () -> Unit,
     isFavorite: Boolean,
     onNavigateBack: () -> Unit
@@ -68,6 +69,7 @@ fun ForecastGraphScreen(
                 onNavigateToGraph = onNavigateToGraph,
                 onNavigateToSettings = onNavigateToSettings,
                 onNavigateToSearch = onNavigateToSearch,
+                onNavigateToLogin = onNavigateToLogin,
                 onToggleFavorite = onToggleFavorite,
                 isFavorite = isFavorite
             )
