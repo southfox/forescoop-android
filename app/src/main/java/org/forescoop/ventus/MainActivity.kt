@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.ui.dashboard.DashboardUiState
 import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
+import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +47,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToSearch = {
                                 navController.navigate("search")
+                            },
+                            onNavigateToGraph = {
+                                navController.navigate("graph")
                             }
                         )
                     }
@@ -77,6 +81,17 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             }
                         )
+                    }
+                    composable("graph") {
+                        val state by dashboardViewModel.uiState.collectAsState()
+                        if (state is DashboardUiState.Success) {
+                            ForecastGraphScreen(
+                                spotForecast = (state as DashboardUiState.Success).spotForecast,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
                     }
                 }
             }

@@ -5,16 +5,19 @@ lives at `https://github.com/patagonia2019/forescoop`). This is a **separate pro
 directory/git history, started fresh rather than mixed into the Swift
 package.
 
-## Status: Spot Search & Favorites (Step 7)
+## Status: Advanced Features (Step 8-10)
 
-The project now includes spot search and favorites management.
+The project now includes Home Screen Widgets and a custom Graph View.
 
-- **Forecast Intelligence**: Implemented a "Smart Overview" that provides human-readable summaries and highlights key trends (Ice Hazard, Cold Snap, etc.).
-- **Persistence**: Favorites and the last viewed spot are persisted using Android DataStore.
+- **Home Screen Widgets**: Glance-based widgets for current weather and wind.
+- **Graph View**: A dense, custom-drawn graph using Compose Canvas, showing wind, gusts, temperature, rain, humidity, and clouds.
+- **Forecast Intelligence**: Implemented a "Smart Overview" that provides human-readable summaries and highlights key trends.
+- **Spot Search & Favorites**: Fully functional spot discovery and local persistence.
 - **Tech Stack**:
     - Kotlin + Jetpack Compose + Material3
+    - Jetpack Glance for widgets
+    - Compose Canvas for custom charts
     - Retrofit + Gson for networking
-    - Jetpack Navigation
     - Android DataStore for local persistence
 
 ## One-time setup
@@ -50,7 +53,10 @@ ones later.
 6. **Settings & Units** [x]
 7. **Spot Search & Favorites** [x]
 8. **Forecast Intelligence (AI overview)** [x]
-9. **Widgets** - Glance-based home screen widgets.
+9. **Widgets** [x]
+10. **Graph View** [x]
+11. **Forecast Accessibility & Refinements** - Port advanced accessibility logic and polish the UI.
+12. **Windguru PRO Features** - Authenticated exact-coordinate forecasts.
 
 Each step should land as its own reviewable change, matching how the Swift
 side of this session progressed feature-by-feature rather than as one large

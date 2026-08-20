@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,7 +41,8 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
     onNavigateToGrid: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    onNavigateToGraph: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -97,11 +99,20 @@ fun DashboardScreen(
                                 }
                             }
 
-                            Button(
-                                onClick = onNavigateToGrid,
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                            ) {
-                                Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconButton(
+                                    onClick = onNavigateToGraph,
+                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                                ) {
+                                    Icon(imageVector = Icons.AutoMirrored.Filled.ShowChart, contentDescription = "Show Graph", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+
+                                Button(
+                                    onClick = onNavigateToGrid,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                                ) {
+                                    Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
                             }
                         }
                         
