@@ -14,18 +14,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.data.model.SpotForecast
+import org.forescoop.ventus.ui.common.AnimatedWeatherBackground
 import org.forescoop.ventus.ui.common.Knots
+import org.forescoop.ventus.ui.common.TemperatureUnit
+import org.forescoop.ventus.ui.common.WeatherBackgroundCondition
 import org.forescoop.ventus.ui.common.WindSpeedUnit
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToGrid: () -> Unit
+    onNavigateToGrid: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -40,11 +46,32 @@ fun DashboardScreen(
                 }
             }
             is DashboardUiState.Success -> {
-                Column {
-                    Button(onClick = onNavigateToGrid, modifier = Modifier.padding(16.dp)) {
-                        Text("Show Grid")
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AnimatedWeatherBackground(forecast = state.spotForecast)
+                    
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            IconButton(
+                                onClick = onNavigateToSettings,
+                                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                            ) {
+                                Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+
+                            Button(
+                                onClick = onNavigateToGrid,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                            ) {
+                                Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        DashboardContent(state.spotForecast, state.windUnit, state.tempUnit)
                     }
-                    DashboardContent(state.spotForecast)
                 }
             }
             is DashboardUiState.Error -> {
@@ -57,19 +84,27 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardContent(spotForecast: SpotForecast) {
+fun DashboardContent(
+    spotForecast: SpotForecast,
+    windUnit: WindSpeedUnit,
+    tempUnit: TemperatureUnit
+) {
     val forecast = spotForecast.forecast
-    val currentHour = spotForecast.availableForecastHours.firstOrNull() // Simplify for now
+    val currentHour = spotForecast.currentForecastHour
+    val condition = remember(spotForecast, currentHour) { WeatherBackgroundCondition(spotForecast, currentHour) }
+    val contentColor = if (condition.isNight) Color.White else MaterialTheme.colorScheme.onBackground
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = spotForecast.displayName,
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            color = contentColor
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -82,13 +117,26 @@ fun DashboardContent(spotForecast: SpotForecast) {
                 "wb_cloudy" -> Icons.Default.Cloud
                 "nightlight" -> Icons.Default.Nightlight
                 "cloud" -> Icons.Default.Cloud
+                "ac_unit" -> Icons.Default.AcUnit
+                "umbrella" -> Icons.Default.BeachAccess
+                "water_drop" -> Icons.Default.WaterDrop
                 else -> Icons.Default.WbSunny
             }
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = contentColor
+            )
             Spacer(modifier = Modifier.width(16.dp))
+            
+            val rawTemp = forecast?.temperatureReal(currentHour) ?: forecast?.temperature(currentHour)
+            val displayTemp = rawTemp?.let { org.forescoop.ventus.ui.common.Temperature(it).value(tempUnit).toInt() }
+            
             Text(
-                text = "${forecast?.temperatureReal(currentHour) ?: forecast?.temperature(currentHour) ?: "--"}°C",
-                style = MaterialTheme.typography.displayMedium
+                text = "${displayTemp ?: "--"}${tempUnit.label}",
+                style = MaterialTheme.typography.displayMedium,
+                color = contentColor
             )
         }
 
@@ -98,16 +146,18 @@ fun DashboardContent(spotForecast: SpotForecast) {
         val windSpeed = forecast?.windSpeed(currentHour)
         if (windSpeed != null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Air, contentDescription = null)
+                Icon(imageVector = Icons.Default.Air, contentDescription = null, tint = contentColor)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "${Knots(windSpeed).value(WindSpeedUnit.KNOTS).toInt()} knots",
-                    style = MaterialTheme.typography.headlineSmall
+                    text = "${Knots(windSpeed).value(windUnit).toInt()} ${windUnit.label}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = contentColor
                 )
             }
             Text(
                 text = forecast.windDirectionName(currentHour) ?: "",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = contentColor
             )
         }
     }

@@ -1,25 +1,22 @@
 # Ventus for Android
 
 Android port of the Ventus/Forescoop weather app (the Swift/SwiftUI original
-lives at `../forescoop`). This is a **separate project** in its own
+lives at `https://github.com/patagonia2019/forescoop`). This is a **separate project** in its own
 directory/git history, started fresh rather than mixed into the Swift
 package.
 
-## Status: Data Layer + Initial UI (Step 2-4)
+## Status: UI Refinement + Animated Background (Step 5)
 
-The project now includes the core Windguru API integration and initial UI for the Dashboard and Forecast Grid.
+The project now includes a refined Forecast Grid and an animated weather background.
 
-- **Data Layer**: Migrated Swift models to Kotlin Data Classes with custom GSON deserializers.
-- **Networking**: Retrofit integration with the Windguru API.
-- **UI**: 
-    - **Dashboard**: Current conditions for a spot with wind and temperature.
-    - **Forecast Grid**: Dense horizontal table of forecast metrics.
-    - **Navigation**: Jetpack Navigation between screens.
+- **UI Refinement**: The Forecast Grid now features color-coded cells for wind, temperature, clouds, and precipitation, matching the Windguru look and feel.
+- **Animated Background**: Implemented a native Compose-based `AnimatedWeatherBackground` that reacts to current conditions (sun, clouds, rain, snow, night).
+- **Logic Enhancements**: Ported advanced weather symbol logic and current hour resolution from the iOS project.
 - **Tech Stack**:
     - Kotlin + Jetpack Compose + Material3
     - Retrofit + Gson for networking
     - Jetpack Navigation
-    - `minSdk` 26, `targetSdk`/`compileSdk` 35
+    - Compose Animations for weather effects
 
 ## One-time setup
 
@@ -49,8 +46,8 @@ ones later.
 1. **Bare scaffold** [x]
 2. **Windguru API + data layer** [x]
 3. **First real screen (Dashboard)** [x]
-4. **Grid view** [/] - Initial implementation done.
-5. **Weather Background** - Implement the animated weather background (wind, clouds, rain, snow).
+4. **Grid view** [x]
+5. **Weather Background** [x]
 6. **Settings & Units** - Unit selection (knots, km/h, °C, °F) and preferences persistence.
 7. **Spot Search & Favorites** - Port the location picker and Windguru account integration.
 8. **Widgets** - Glance-based home screen widgets.

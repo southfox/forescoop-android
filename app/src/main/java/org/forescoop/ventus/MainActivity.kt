@@ -22,6 +22,7 @@ import org.forescoop.ventus.ui.theme.VentusTheme
 import org.forescoop.ventus.ui.dashboard.DashboardViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.ui.dashboard.DashboardUiState
+import org.forescoop.ventus.ui.settings.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,14 +39,29 @@ class MainActivity : ComponentActivity() {
                             viewModel = dashboardViewModel,
                             onNavigateToGrid = {
                                 navController.navigate("grid")
+                            },
+                            onNavigateToSettings = {
+                                navController.navigate("settings")
                             }
                         )
                     }
                     composable("grid") {
                         val state by dashboardViewModel.uiState.collectAsState()
                         if (state is DashboardUiState.Success) {
-                            ForecastGridScreen(spotForecast = (state as DashboardUiState.Success).spotForecast)
+                            ForecastGridScreen(
+                                spotForecast = (state as DashboardUiState.Success).spotForecast,
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
+                    }
+                    composable("settings") {
+                        SettingsScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
                 }
             }

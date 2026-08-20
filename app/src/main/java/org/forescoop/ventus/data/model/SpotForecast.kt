@@ -47,6 +47,21 @@ class SpotForecast(
     val forecast: Forecast?
         get() = forecastModel?.info
 
+    val currentForecastHour: String?
+        get() {
+            val hours = availableForecastHours.mapNotNull { hour ->
+                hour.toIntOrNull()?.let { hour to it }
+            }
+            val initStamp = forecast?.initStamp ?: 0
+            if (initStamp > 0) {
+                val elapsedHours = (System.currentTimeMillis() / 1000.0 - initStamp) / 3600.0
+                return hours.lastOrNull { it.second.toDouble() <= elapsedHours }?.first ?: hours.firstOrNull()?.first
+            }
+            val calendar = Calendar.getInstance()
+            val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+            return hours.lastOrNull { it.second <= currentHour }?.first ?: hours.firstOrNull()?.first
+        }
+
     fun isDaylight(date: Date): Boolean {
         val sunriseDate = daylightDate(sunrise, date)
         val sunsetDate = daylightDate(sunset, date)
@@ -69,19 +84,46 @@ class SpotForecast(
     }
 
     fun weatherSymbolName(hour: String?): String {
-        val precipitation = forecast?.precipitation(hour) ?: forecast?.precipitation1(hour) ?: 0.0
-        val temp = forecast?.temperatureReal(hour) ?: forecast?.temperature(hour) ?: 0.0
-        val cloudCover = forecast?.cloudCoverTotal(hour) ?: 0
-        val isNight = !isDaylight(forecastDate(hour) ?: Date())
+        return weatherSymbolNames(hour).firstOrNull() ?: "wb_sunny"
+    }
 
-        return when {
-            precipitation > 0.0 && temp <= 0 -> "ac_unit" // Snow
-            precipitation > 8.0 -> "umbrella" // Heavy rain
-            precipitation > 0.0 -> "cloudy_filled" // Rain
-            cloudCover <= 20 -> if (isNight) "nightlight" else "wb_sunny"
-            cloudCover <= 50 -> if (isNight) "cloudy_night" else "wb_cloudy"
-            else -> "cloud"
+    fun weatherSymbolNames(hour: String?): List<String> {
+        val precipitation = forecast?.precipitation(hour) ?: forecast?.precipitation1(hour) ?: 0.0
+        val modelTemperature = forecast?.temperature(hour) ?: forecast?.temperatureReal(hour) ?: 0.0
+        val phaseTemperature = forecast?.temperatureReal(hour) ?: forecast?.temperature(hour) ?: 0.0
+        val cloudCover = forecast?.cloudCoverTotal(hour) ?: 0
+        val humidity = forecast?.relativeHumidity(hour) ?: 0
+        val windSpeed = forecast?.windSpeed(hour) ?: 0.0
+        val windGusts = forecast?.windGustsKnots(hour) ?: 0.0
+        val isNight = !isDaylight(forecastDate(hour) ?: Date())
+        val symbols = mutableListOf<String>()
+
+        val oktas = (cloudCover.toDouble() / 100.0 * 8.0).toInt()
+        val isSnow = precipitation > 0 && phaseTemperature <= 0
+        val isHeavyRain = precipitation > 0 && !isSnow && precipitation >= 8
+        val isLightRain = precipitation > 0 && !isSnow && !isHeavyRain
+
+        if (isSnow) {
+            symbols.add("ac_unit") // snowflake
+        } else if (isHeavyRain) {
+            symbols.add("umbrella") // cloud.heavyrain
+        } else if (isLightRain && oktas <= 2) {
+            symbols.add(if (isNight) "nightlight" else "wb_sunny") // cloud.moon.rain.fill / cloud.sun.rain.fill
+        } else if (isLightRain) {
+            symbols.add(if (precipitation < 2) "water_drop" else "umbrella") // cloud.drizzle / cloud.rain.fill
+        } else if (humidity >= 95 && cloudCover >= 80) {
+            symbols.add("foggy") // cloud.fog
+        } else if (oktas <= 2) {
+            symbols.add(if (isNight) "nightlight" else if (modelTemperature >= 30) "wb_sunny" else "wb_sunny")
+        } else if (oktas <= 4) {
+            symbols.add(if (isNight) "nightlight" else "wb_cloudy")
+        } else if (oktas <= 7) {
+            symbols.add("cloud")
+        } else {
+            symbols.add("cloud") // cloud.fill
         }
+        
+        return symbols
     }
 
     fun forecastDate(hour: String?, referenceDate: Date = Date()): Date? {

@@ -18,9 +18,9 @@ enum class WindSpeedUnit(val label: String) {
         fun fromWindguruPreference(pref: String?): WindSpeedUnit? {
             return when (pref?.trim()?.lowercase()) {
                 "knots", "knot", "kt", "kts" -> KNOTS
-                "m/s", "ms", "mps" -> METERS_PER_SECOND
-                "km/h", "kmh", "kph" -> KILOMETERS_PER_HOUR
-                "mph" -> MILES_PER_HOUR
+                "m/s", "ms", "mps", "meters_per_second" -> METERS_PER_SECOND
+                "km/h", "kmh", "kph", "kilometers_per_hour" -> KILOMETERS_PER_HOUR
+                "mph", "miles_per_hour" -> MILES_PER_HOUR
                 "bft", "beaufort" -> BEAUFORT
                 else -> null
             }
