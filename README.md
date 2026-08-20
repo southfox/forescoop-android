@@ -5,19 +5,21 @@ lives at `../forescoop`). This is a **separate project** in its own
 directory/git history, started fresh rather than mixed into the Swift
 package.
 
-## Status: bare scaffold (step 1)
+## Status: Data Layer + Initial UI (Step 2-4)
 
-This commit is intentionally minimal: a Gradle project that opens, syncs,
-and runs a single Compose screen with no Windguru-specific code yet. Nothing
-here has been built or run — there's no Android SDK/Gradle toolchain in the
-environment that generated it, so **the first thing to do is open it in
-Android Studio and confirm it actually builds** before trusting any of it.
+The project now includes the core Windguru API integration and initial UI for the Dashboard and Forecast Grid.
 
-- Kotlin + Jetpack Compose + Material3
-- `applicationId` / package: `org.forescoop.ventus`
-- `minSdk` 26, `targetSdk`/`compileSdk` 35
-- AGP 8.7.0, Kotlin 2.0.21, Gradle 8.10.2 (via version catalog:
-  `gradle/libs.versions.toml`)
+- **Data Layer**: Migrated Swift models to Kotlin Data Classes with custom GSON deserializers.
+- **Networking**: Retrofit integration with the Windguru API.
+- **UI**: 
+    - **Dashboard**: Current conditions for a spot with wind and temperature.
+    - **Forecast Grid**: Dense horizontal table of forecast metrics.
+    - **Navigation**: Jetpack Navigation between screens.
+- **Tech Stack**:
+    - Kotlin + Jetpack Compose + Material3
+    - Retrofit + Gson for networking
+    - Jetpack Navigation
+    - `minSdk` 26, `targetSdk`/`compileSdk` 35
 
 ## One-time setup
 
@@ -44,25 +46,14 @@ ones later.
 
 ## Planned steps (roughly in order)
 
-1. **Bare scaffold** ← you are here.
-2. **Windguru API + data layer** — port the networking client and the
-   forecast/spot/model types (`Sources/Forescoop/Classes/Model`,
-   `Sources/Forescoop/Classes/Service` on the Swift side) to Kotlin. No UI
-   beyond a debug screen.
-3. **First real screen** — a single-location forecast view (roughly
-   `ForecastOverview.swift`'s scope): current conditions, hourly strip.
-4. **Grid view** — the hour × metric comparison table
-   (`WindguruForecastGridView.swift`).
-5. **Settings** — units, theme (System/Light/Dark + named palettes),
-   language override, forecast view mode.
-6. **Widgets** — Glance-based home screen widget, Android's equivalent of
-   the WidgetKit extension (`Sources/ForescoopWidgets`).
-7. **Forecast insight** — the AI-assisted "Overview" write-up
-   (`ForecastIntelligenceText.swift`'s deterministic + on-device-model
-   paths) — Android equivalent likely uses Gemini Nano / ML Kit GenAI APIs
-   where available, falling back to the same deterministic template logic.
-8. Graph view, alerts, favorites/account, localization, CarPlay-equivalent
-   (Android Auto) — later, roughly mirroring the Swift app's feature order.
+1. **Bare scaffold** [x]
+2. **Windguru API + data layer** [x]
+3. **First real screen (Dashboard)** [x]
+4. **Grid view** [/] - Initial implementation done.
+5. **Weather Background** - Implement the animated weather background (wind, clouds, rain, snow).
+6. **Settings & Units** - Unit selection (knots, km/h, °C, °F) and preferences persistence.
+7. **Spot Search & Favorites** - Port the location picker and Windguru account integration.
+8. **Widgets** - Glance-based home screen widgets.
 
 Each step should land as its own reviewable change, matching how the Swift
 side of this session progressed feature-by-feature rather than as one large

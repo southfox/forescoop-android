@@ -1,3 +1,10 @@
+//
+//  Color.kt
+//  Ventus
+//
+//  Created by Javier Fuchs on 2026-08-20.
+//  Copyright © 2026 Mobile Patagonia. All rights reserved.
+//
 package org.forescoop.ventus.ui.theme
 
 import androidx.compose.ui.graphics.Color
