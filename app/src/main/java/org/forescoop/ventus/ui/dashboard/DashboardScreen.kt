@@ -9,6 +9,8 @@ package org.forescoop.ventus.ui.dashboard
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -19,6 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.data.model.SpotForecast
@@ -51,7 +58,11 @@ fun DashboardScreen(
                 Box(modifier = Modifier.fillMaxSize()) {
                     AnimatedWeatherBackground(forecast = state.spotForecast)
                     
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -93,7 +104,10 @@ fun DashboardScreen(
                                 Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
+                        
                         DashboardContent(state.spotForecast, state.windUnit, state.tempUnit, onNavigateToSearch)
+                        
+                        SummarySection(state.summary)
                     }
                 }
             }
@@ -120,8 +134,9 @@ fun DashboardContent(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+            .fillMaxWidth()
+            .padding(16.dp)
+            .padding(top = 40.dp, bottom = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -191,6 +206,47 @@ fun DashboardContent(
                 style = MaterialTheme.typography.bodyLarge,
                 color = contentColor
             )
+        }
+    }
+}
+
+@Composable
+fun SummarySection(summary: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Forecast Insight",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = parseMarkdown(summary),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+fun parseMarkdown(text: String): AnnotatedString {
+    return buildAnnotatedString {
+        val parts = text.split("**")
+        parts.forEachIndexed { index, part ->
+            if (index % 2 == 1) {
+                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(part)
+                }
+            } else {
+                append(part)
+            }
         }
     }
 }

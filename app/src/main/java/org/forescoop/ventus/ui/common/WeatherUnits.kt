@@ -43,6 +43,28 @@ enum class TemperatureUnit(val label: String) {
     }
 }
 
+enum class WaveHeightUnit(val label: String) {
+    METERS("m"),
+    FEET("ft")
+}
+
+enum class PressureUnit(val label: String) {
+    HECTOPASCALS("hPa"),
+    MILLIBARS("mbar"),
+    INCHES_OF_MERCURY("inHg"),
+    MILLIMETERS_OF_MERCURY("mmHg")
+}
+
+enum class PrecipitationUnit(val label: String) {
+    MILLIMETERS("mm"),
+    INCHES("in")
+}
+
+enum class FreezingLevelUnit(val label: String) {
+    METERS("m"),
+    FEET("ft")
+}
+
 class Knots(val value: Double) {
     val kmh: Double get() = value * 1.852
     val mph: Double get() = value * 1.15078
@@ -81,6 +103,43 @@ data class Temperature(val celsius: Double) {
         return when (unit) {
             TemperatureUnit.CELSIUS -> celsius
             TemperatureUnit.FAHRENHEIT -> celsius * 9 / 5 + 32
+        }
+    }
+}
+
+data class Precipitation(val millimeters: Double) {
+    fun value(unit: PrecipitationUnit): Double {
+        return when (unit) {
+            PrecipitationUnit.MILLIMETERS -> millimeters
+            PrecipitationUnit.INCHES -> millimeters / 25.4
+        }
+    }
+}
+
+data class AtmosphericPressure(val hectopascals: Double) {
+    fun value(unit: PressureUnit): Double {
+        return when (unit) {
+            PressureUnit.HECTOPASCALS, PressureUnit.MILLIBARS -> hectopascals
+            PressureUnit.INCHES_OF_MERCURY -> hectopascals * 0.0295299830714
+            PressureUnit.MILLIMETERS_OF_MERCURY -> hectopascals * 0.750061683
+        }
+    }
+}
+
+data class FreezingLevel(val meters: Double) {
+    fun value(unit: FreezingLevelUnit): Double {
+        return when (unit) {
+            FreezingLevelUnit.METERS -> meters
+            FreezingLevelUnit.FEET -> meters * 3.280839895
+        }
+    }
+}
+
+data class WaveHeight(val meters: Double) {
+    fun value(unit: WaveHeightUnit): Double {
+        return when (unit) {
+            WaveHeightUnit.METERS -> meters
+            WaveHeightUnit.FEET -> meters * 3.280839895
         }
     }
 }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.domain.repository.WindguruRepository
+import org.forescoop.ventus.ui.common.ForecastIntelligence
+import org.forescoop.ventus.ui.common.ForecastUnitPreferences
 import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WindSpeedUnit
 
@@ -30,7 +32,8 @@ sealed class DashboardUiState {
         val spotForecast: SpotForecast,
         val windUnit: WindSpeedUnit,
         val tempUnit: TemperatureUnit,
-        val isFavorite: Boolean
+        val isFavorite: Boolean,
+        val summary: String
     ) : DashboardUiState()
     data class Error(val message: String) : DashboardUiState()
 }
@@ -69,7 +72,15 @@ class DashboardViewModel @JvmOverloads constructor(
         when {
             error != null -> DashboardUiState.Error(error)
             loading || forecast == null -> DashboardUiState.Loading
-            else -> DashboardUiState.Success(forecast, wind, temp, favs.contains(forecast.idSpot))
+            else -> {
+                val summary = ForecastIntelligence.detailedSummary(
+                    context = getApplication(),
+                    forecast = forecast,
+                    hour = forecast.currentForecastHour,
+                    prefs = ForecastUnitPreferences(temperatureUnit = temp, windSpeedUnit = wind)
+                )
+                DashboardUiState.Success(forecast, wind, temp, favs.contains(forecast.idSpot), summary)
+            }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 

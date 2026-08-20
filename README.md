@@ -9,8 +9,7 @@ package.
 
 The project now includes spot search and favorites management.
 
-- **Spot Search**: Users can search for Windguru spots by city or name.
-- **Favorites**: Spots can be marked as favorites for quick access.
+- **Forecast Intelligence**: Implemented a "Smart Overview" that provides human-readable summaries and highlights key trends (Ice Hazard, Cold Snap, etc.).
 - **Persistence**: Favorites and the last viewed spot are persisted using Android DataStore.
 - **Tech Stack**:
     - Kotlin + Jetpack Compose + Material3
@@ -50,7 +49,7 @@ ones later.
 5. **Weather Background** [x]
 6. **Settings & Units** [x]
 7. **Spot Search & Favorites** [x]
-8. **Forecast Intelligence (AI overview)** - Port the AI-assisted weather summary logic.
+8. **Forecast Intelligence (AI overview)** [x]
 9. **Widgets** - Glance-based home screen widgets.
 
 Each step should land as its own reviewable change, matching how the Swift
