@@ -9,6 +9,7 @@ package org.forescoop.ventus.data.remote
 
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.data.model.SpotInfo
+import org.forescoop.ventus.data.model.SpotResult
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -27,5 +28,9 @@ interface WindguruService {
         @Query("id_spot") spotId: String
     ): SpotInfo
 
-    // Add other methods as needed based on the Swift service
+    @GET("int/jsonapi.php?client=wgapp")
+    suspend fun searchSpots(
+        @Query("q") query: String = "search_spots",
+        @Query("search") search: String
+    ): SpotResult
 }

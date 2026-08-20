@@ -13,8 +13,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Default Material3 type ramp for now. Revisit once the app has real
-// content density needs (forecast grid, graph, widget-style cards).
 val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,

@@ -12,6 +12,8 @@ import org.forescoop.ventus.data.model.Forecast
 import org.forescoop.ventus.data.model.ForecastDeserializer
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.data.model.SpotForecastDeserializer
+import org.forescoop.ventus.data.model.SpotResult
+import org.forescoop.ventus.data.model.SpotResultDeserializer
 import org.forescoop.ventus.data.model.TimeWeather
 import org.forescoop.ventus.data.model.TimeWeatherDeserializer
 import retrofit2.Retrofit
@@ -24,6 +26,7 @@ object RetrofitClient {
         .registerTypeAdapter(TimeWeather::class.java, TimeWeatherDeserializer())
         .registerTypeAdapter(Forecast::class.java, ForecastDeserializer())
         .registerTypeAdapter(SpotForecast::class.java, SpotForecastDeserializer())
+        .registerTypeAdapter(SpotResult::class.java, SpotResultDeserializer())
         .create()
 
     val windguruService: WindguruService by lazy {

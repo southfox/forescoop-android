@@ -33,8 +33,32 @@ class PreferenceStore(private val context: Context) {
         }
     }
 
+    fun getFavorites(): Flow<Set<String>> {
+        val prefKey = androidx.datastore.preferences.core.stringSetPreferencesKey(KEY_FAVORITES)
+        return context.dataStore.data.map { preferences ->
+            preferences[prefKey] ?: emptySet()
+        }
+    }
+
+    suspend fun addFavorite(spotId: String) {
+        val prefKey = androidx.datastore.preferences.core.stringSetPreferencesKey(KEY_FAVORITES)
+        context.dataStore.edit { preferences ->
+            val current = preferences[prefKey] ?: emptySet()
+            preferences[prefKey] = current + spotId
+        }
+    }
+
+    suspend fun removeFavorite(spotId: String) {
+        val prefKey = androidx.datastore.preferences.core.stringSetPreferencesKey(KEY_FAVORITES)
+        context.dataStore.edit { preferences ->
+            val current = preferences[prefKey] ?: emptySet()
+            preferences[prefKey] = current - spotId
+        }
+    }
+
     companion object {
         const val KEY_WIND_UNIT = "wind_unit"
         const val KEY_TEMP_UNIT = "temp_unit"
+        const val KEY_FAVORITES = "favorites"
     }
 }

@@ -9,6 +9,7 @@ package org.forescoop.ventus.domain.repository
 
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.data.model.SpotInfo
+import org.forescoop.ventus.data.model.SpotResult
 import org.forescoop.ventus.data.remote.RetrofitClient
 
 class WindguruRepository {
@@ -20,5 +21,9 @@ class WindguruRepository {
 
     suspend fun getSpotInfo(spotId: String): SpotInfo {
         return service.getSpotInfo(spotId = spotId)
+    }
+
+    suspend fun searchSpots(query: String): SpotResult {
+        return service.searchSpots(search = query)
     }
 }

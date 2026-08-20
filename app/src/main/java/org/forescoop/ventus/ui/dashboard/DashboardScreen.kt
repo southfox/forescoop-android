@@ -7,6 +7,7 @@
 //
 package org.forescoop.ventus.ui.dashboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -31,7 +32,8 @@ import org.forescoop.ventus.ui.common.WindSpeedUnit
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
     onNavigateToGrid: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSearch: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -54,13 +56,34 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(
-                                onClick = onNavigateToSettings,
-                                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-                            ) {
-                                Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                IconButton(
+                                    onClick = onNavigateToSettings,
+                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                                ) {
+                                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+
+                                IconButton(
+                                    onClick = onNavigateToSearch,
+                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                                ) {
+                                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+
+                                IconButton(
+                                    onClick = { viewModel.toggleFavorite() },
+                                    colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                                ) {
+                                    Icon(
+                                        imageVector = if (state.isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                                        contentDescription = "Favorite",
+                                        tint = if (state.isFavorite) Color.Yellow else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
 
                             Button(
@@ -70,7 +93,7 @@ fun DashboardScreen(
                                 Text("Show Grid", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
-                        DashboardContent(state.spotForecast, state.windUnit, state.tempUnit)
+                        DashboardContent(state.spotForecast, state.windUnit, state.tempUnit, onNavigateToSearch)
                     }
                 }
             }
@@ -87,7 +110,8 @@ fun DashboardScreen(
 fun DashboardContent(
     spotForecast: SpotForecast,
     windUnit: WindSpeedUnit,
-    tempUnit: TemperatureUnit
+    tempUnit: TemperatureUnit,
+    onNavigateToSearch: () -> Unit
 ) {
     val forecast = spotForecast.forecast
     val currentHour = spotForecast.currentForecastHour
@@ -104,8 +128,16 @@ fun DashboardContent(
         Text(
             text = spotForecast.displayName,
             style = MaterialTheme.typography.headlineMedium,
-            color = contentColor
+            color = contentColor,
+            modifier = Modifier.clickable { onNavigateToSearch() }
         )
+        if (!spotForecast.spot.isNullOrEmpty()) {
+            Text(
+                text = spotForecast.spot!!,
+                style = MaterialTheme.typography.titleMedium,
+                color = contentColor.copy(alpha = 0.8f)
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         // Basic current weather info

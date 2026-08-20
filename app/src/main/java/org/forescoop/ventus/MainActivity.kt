@@ -23,6 +23,7 @@ import org.forescoop.ventus.ui.dashboard.DashboardViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.ui.dashboard.DashboardUiState
 import org.forescoop.ventus.ui.settings.SettingsScreen
+import org.forescoop.ventus.ui.search.SpotSearchScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +43,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToSettings = {
                                 navController.navigate("settings")
+                            },
+                            onNavigateToSearch = {
+                                navController.navigate("search")
                             }
                         )
                     }
@@ -58,6 +62,17 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("settings") {
                         SettingsScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+                    composable("search") {
+                        SpotSearchScreen(
+                            onSpotSelected = { spotId ->
+                                dashboardViewModel.loadForecast(spotId)
+                                navController.popBackStack()
+                            },
                             onNavigateBack = {
                                 navController.popBackStack()
                             }

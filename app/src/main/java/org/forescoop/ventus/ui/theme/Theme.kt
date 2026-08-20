@@ -1,10 +1,3 @@
-//
-//  Theme.kt
-//  Ventus
-//
-//  Created by Javier Fuchs on 2026-08-20.
-//  Copyright © 2026 Mobile Patagonia. All rights reserved.
-//
 package org.forescoop.ventus.ui.theme
 
 import android.os.Build
@@ -29,12 +22,6 @@ private val LightColorScheme = lightColorScheme(
     tertiary = VentusSky40
 )
 
-/// Mirrors the intent of AppAppearanceMode + VentusTheme on iOS (Sources/
-/// Forescoop/Classes/View/Settings/{AppAppearanceMode,VentusTheme}.swift):
-/// System/Light/Dark plus a swappable color theme. For the bare scaffold
-/// this is just System (via `isSystemInDarkTheme`) with dynamic color on
-/// Android 12+; the System/Light/Dark override and the named palettes
-/// (Ocean, Forest, Sunset, …) come later.
 @Composable
 fun VentusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

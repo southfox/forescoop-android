@@ -19,7 +19,7 @@ import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WindSpeedUnit
 
-class ForecastGridViewModel(application: Application) : AndroidViewModel(application) {
+class ForecastGridViewModel @JvmOverloads constructor(application: Application) : AndroidViewModel(application) {
     private val preferenceStore = PreferenceStore(application)
 
     val windUnit: StateFlow<WindSpeedUnit> = preferenceStore.getString(PreferenceStore.KEY_WIND_UNIT)

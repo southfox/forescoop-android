@@ -16,17 +16,16 @@ open class Spot(
     @SerializedName("nickname") val nickname: String? = null
 ) {
     val identifier: String? get() = idSpot
-    val name: String? get() = spotName
+    val spot: String? get() = spotName
     val countryName: String? get() = country
     val nickName: String? get() = nickname
 
     val displayName: String
         get() {
-            val title = name?.trim()
             if (identifier.isNullOrEmpty() || identifier == "0") {
-                return if (!title.isNullOrEmpty()) title else "Unknown location"
+                return if (!spot.isNullOrEmpty()) spot!! else "Unknown location"
             }
-            return "${if (!title.isNullOrEmpty()) title else "Windguru spot"} #$identifier"
+            return "Spot #$identifier"
         }
 
     val isCoordinateLocation: Boolean get() = identifier == "0"

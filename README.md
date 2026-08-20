@@ -5,18 +5,18 @@ lives at `https://github.com/patagonia2019/forescoop`). This is a **separate pro
 directory/git history, started fresh rather than mixed into the Swift
 package.
 
-## Status: UI Refinement + Animated Background (Step 5)
+## Status: Spot Search & Favorites (Step 7)
 
-The project now includes a refined Forecast Grid and an animated weather background.
+The project now includes spot search and favorites management.
 
-- **UI Refinement**: The Forecast Grid now features color-coded cells for wind, temperature, clouds, and precipitation, matching the Windguru look and feel.
-- **Animated Background**: Implemented a native Compose-based `AnimatedWeatherBackground` that reacts to current conditions (sun, clouds, rain, snow, night).
-- **Logic Enhancements**: Ported advanced weather symbol logic and current hour resolution from the iOS project.
+- **Spot Search**: Users can search for Windguru spots by city or name.
+- **Favorites**: Spots can be marked as favorites for quick access.
+- **Persistence**: Favorites and the last viewed spot are persisted using Android DataStore.
 - **Tech Stack**:
     - Kotlin + Jetpack Compose + Material3
     - Retrofit + Gson for networking
     - Jetpack Navigation
-    - Compose Animations for weather effects
+    - Android DataStore for local persistence
 
 ## One-time setup
 
@@ -48,9 +48,10 @@ ones later.
 3. **First real screen (Dashboard)** [x]
 4. **Grid view** [x]
 5. **Weather Background** [x]
-6. **Settings & Units** - Unit selection (knots, km/h, °C, °F) and preferences persistence.
-7. **Spot Search & Favorites** - Port the location picker and Windguru account integration.
-8. **Widgets** - Glance-based home screen widgets.
+6. **Settings & Units** [x]
+7. **Spot Search & Favorites** [x]
+8. **Forecast Intelligence (AI overview)** - Port the AI-assisted weather summary logic.
+9. **Widgets** - Glance-based home screen widgets.
 
 Each step should land as its own reviewable change, matching how the Swift
 side of this session progressed feature-by-feature rather than as one large

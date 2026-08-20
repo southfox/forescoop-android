@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.data.model.SpotForecast
@@ -28,7 +29,8 @@ sealed class DashboardUiState {
     data class Success(
         val spotForecast: SpotForecast,
         val windUnit: WindSpeedUnit,
-        val tempUnit: TemperatureUnit
+        val tempUnit: TemperatureUnit,
+        val isFavorite: Boolean
     ) : DashboardUiState()
     data class Error(val message: String) : DashboardUiState()
 }
@@ -51,18 +53,31 @@ class DashboardViewModel @JvmOverloads constructor(
         .map { TemperatureUnit.fromWindguruPreference(it) ?: TemperatureUnit.CELSIUS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TemperatureUnit.CELSIUS)
 
+    val favorites = preferenceStore.getFavorites()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     val uiState: StateFlow<DashboardUiState> = combine(
-        _spotForecast, windUnit, tempUnit, _error, _loading
-    ) { forecast, wind, temp, error, loading ->
+        _spotForecast, windUnit, tempUnit, favorites, _error, _loading
+    ) { args ->
+        val forecast = args[0] as? SpotForecast
+        val wind = args[1] as WindSpeedUnit
+        val temp = args[2] as TemperatureUnit
+        val favs = args[3] as Set<String>
+        val error = args[4] as? String
+        val loading = args[5] as Boolean
+
         when {
             error != null -> DashboardUiState.Error(error)
             loading || forecast == null -> DashboardUiState.Loading
-            else -> DashboardUiState.Success(forecast, wind, temp)
+            else -> DashboardUiState.Success(forecast, wind, temp, favs.contains(forecast.idSpot))
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 
     init {
-        loadForecast("64141") // Default spot from README
+        viewModelScope.launch {
+            val lastId = preferenceStore.getString("last_spot_id").first()
+            loadForecast(lastId ?: "64141")
+        }
     }
 
     fun loadForecast(spotId: String) {
@@ -72,10 +87,23 @@ class DashboardViewModel @JvmOverloads constructor(
             try {
                 val forecast = repository.getForecast(spotId)
                 _spotForecast.value = forecast
+                preferenceStore.saveString("last_spot_id", spotId)
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error"
             } finally {
                 _loading.value = false
+            }
+        }
+    }
+
+    fun toggleFavorite() {
+        val currentForecast = _spotForecast.value ?: return
+        val spotId = currentForecast.idSpot ?: return
+        viewModelScope.launch {
+            if (favorites.value.contains(spotId)) {
+                preferenceStore.removeFavorite(spotId)
+            } else {
+                preferenceStore.addFavorite(spotId)
             }
         }
     }
