@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.AccountManager
 import org.forescoop.ventus.data.remote.RetrofitClient
+import org.forescoop.ventus.analytics.AnalyticsEvent
+import org.forescoop.ventus.analytics.AnalyticsLogging
+import org.forescoop.ventus.analytics.log
 
 sealed class LoginUiState {
     object Idle : LoginUiState()
@@ -24,7 +27,7 @@ sealed class LoginUiState {
     data class Error(val message: String) : LoginUiState()
 }
 
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
+class LoginViewModel(application: Application, private val analytics: AnalyticsLogging) : AndroidViewModel(application) {
     private val accountManager = AccountManager(application)
     private val service = RetrofitClient.windguruService
 
@@ -39,12 +42,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             _uiState.value = LoginUiState.Loading
+            analytics.log(AnalyticsEvent.LoginAttempted)
             try {
-                // In a real port, we'd call the login endpoint. 
+                // In a real port, we'd call the login endpoint.
                 // RetrofitClient/WindguruService doesn't have it yet, so we add it or mock it.
                 // For now, let's assume successful login if we can fetch user profile.
                 // Or better, let's just mock it for now since we need to update WindguruService.
-                
+
                 // MOCK SUCCESS for this step
                 val mockUser = org.forescoop.ventus.data.model.User(
                     username = username,
@@ -52,8 +56,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 accountManager.signIn(mockUser, password)
                 _uiState.value = LoginUiState.Success
+                analytics.log(AnalyticsEvent.LoginSucceeded)
             } catch (e: Exception) {
                 _uiState.value = LoginUiState.Error(e.message ?: "Login failed")
+                analytics.log(AnalyticsEvent.LoginFailed(e.message ?: e.toString()))
+                analytics.recordException(e)
             }
         }
     }

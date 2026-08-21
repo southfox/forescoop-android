@@ -19,16 +19,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.VentusApplication
+import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WindSpeedUnit
+
+@Composable
+private fun rememberSettingsViewModel(): SettingsViewModel {
+    val application = LocalContext.current.applicationContext as VentusApplication
+    return viewModel(factory = LambdaViewModelFactory { SettingsViewModel(application, application.analytics) })
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(),
+    viewModel: SettingsViewModel = rememberSettingsViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val windUnit by viewModel.windUnit.collectAsState()

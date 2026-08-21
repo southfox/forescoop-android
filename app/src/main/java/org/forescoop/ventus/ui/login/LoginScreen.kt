@@ -16,15 +16,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.VentusApplication
+import org.forescoop.ventus.ui.common.LambdaViewModelFactory
+
+@Composable
+private fun rememberLoginViewModel(): LoginViewModel {
+    val application = LocalContext.current.applicationContext as VentusApplication
+    return viewModel(factory = LambdaViewModelFactory { LoginViewModel(application, application.analytics) })
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    viewModel: LoginViewModel = rememberLoginViewModel(),
     onNavigateBack: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }

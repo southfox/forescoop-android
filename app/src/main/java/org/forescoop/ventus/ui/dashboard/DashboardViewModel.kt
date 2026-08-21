@@ -25,6 +25,9 @@ import org.forescoop.ventus.ui.common.ForecastIntelligence
 import org.forescoop.ventus.ui.common.ForecastUnitPreferences
 import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WindSpeedUnit
+import org.forescoop.ventus.analytics.AnalyticsEvent
+import org.forescoop.ventus.analytics.AnalyticsLogging
+import org.forescoop.ventus.analytics.log
 
 sealed class DashboardUiState {
     object Loading : DashboardUiState()
@@ -38,8 +41,9 @@ sealed class DashboardUiState {
     data class Error(val message: String) : DashboardUiState()
 }
 
-class DashboardViewModel @JvmOverloads constructor(
+class DashboardViewModel(
     application: Application,
+    private val analytics: AnalyticsLogging,
     private val repository: WindguruRepository = WindguruRepository()
 ) : AndroidViewModel(application) {
 
@@ -99,8 +103,11 @@ class DashboardViewModel @JvmOverloads constructor(
                 val forecast = repository.getForecast(spotId)
                 _spotForecast.value = forecast
                 preferenceStore.saveString("last_spot_id", spotId)
+                analytics.log(AnalyticsEvent.ForecastLoadSucceeded(spotId))
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error"
+                analytics.log(AnalyticsEvent.ForecastLoadFailed(spotId, e.message ?: e.toString()))
+                analytics.recordException(e)
             } finally {
                 _loading.value = false
             }
@@ -111,11 +118,13 @@ class DashboardViewModel @JvmOverloads constructor(
         val currentForecast = _spotForecast.value ?: return
         val spotId = currentForecast.idSpot ?: return
         viewModelScope.launch {
-            if (favorites.value.contains(spotId)) {
-                preferenceStore.removeFavorite(spotId)
-            } else {
+            val willBeFavorite = !favorites.value.contains(spotId)
+            if (willBeFavorite) {
                 preferenceStore.addFavorite(spotId)
+            } else {
+                preferenceStore.removeFavorite(spotId)
             }
+            analytics.log(AnalyticsEvent.FavoriteToggled(spotId, willBeFavorite))
         }
     }
 }

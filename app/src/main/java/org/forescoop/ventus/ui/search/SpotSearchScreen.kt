@@ -30,14 +30,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.SpotOwner
+import org.forescoop.ventus.ui.common.LambdaViewModelFactory
+
+@Composable
+private fun rememberSpotSearchViewModel(): SpotSearchViewModel {
+    val application = LocalContext.current.applicationContext as VentusApplication
+    return viewModel(factory = LambdaViewModelFactory { SpotSearchViewModel(application, application.analytics) })
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpotSearchScreen(
-    viewModel: SpotSearchViewModel = viewModel(),
+    viewModel: SpotSearchViewModel = rememberSpotSearchViewModel(),
     onSpotSelected: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {

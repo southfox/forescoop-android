@@ -19,8 +19,11 @@ import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.ui.common.TemperatureUnit
 import org.forescoop.ventus.ui.common.WindSpeedUnit
+import org.forescoop.ventus.analytics.AnalyticsEvent
+import org.forescoop.ventus.analytics.AnalyticsLogging
+import org.forescoop.ventus.analytics.log
 
-class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+class SettingsViewModel(application: Application, private val analytics: AnalyticsLogging) : AndroidViewModel(application) {
     private val preferenceStore = PreferenceStore(application)
 
     val windUnit: StateFlow<WindSpeedUnit> = preferenceStore.getString(PreferenceStore.KEY_WIND_UNIT)
@@ -34,12 +37,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun setWindUnit(unit: WindSpeedUnit) {
         viewModelScope.launch {
             preferenceStore.saveString(PreferenceStore.KEY_WIND_UNIT, unit.name.lowercase())
+            analytics.log(AnalyticsEvent.UnitChanged("wind_speed", unit.name.lowercase()))
         }
     }
 
     fun setTempUnit(unit: TemperatureUnit) {
         viewModelScope.launch {
             preferenceStore.saveString(PreferenceStore.KEY_TEMP_UNIT, unit.name.lowercase())
+            analytics.log(AnalyticsEvent.UnitChanged("temperature", unit.name.lowercase()))
         }
     }
 }

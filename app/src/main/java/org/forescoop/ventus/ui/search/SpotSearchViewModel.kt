@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.data.model.SpotOwner
 import org.forescoop.ventus.domain.repository.WindguruRepository
+import org.forescoop.ventus.analytics.AnalyticsEvent
+import org.forescoop.ventus.analytics.AnalyticsLogging
+import org.forescoop.ventus.analytics.log
 
 sealed class SearchUiState {
     object Idle : SearchUiState()
@@ -28,8 +31,9 @@ sealed class SearchUiState {
     data class Error(val message: String) : SearchUiState()
 }
 
-class SpotSearchViewModel @JvmOverloads constructor(
+class SpotSearchViewModel(
     application: Application,
+    private val analytics: AnalyticsLogging,
     private val repository: WindguruRepository = WindguruRepository()
 ) : AndroidViewModel(application) {
 
@@ -80,9 +84,11 @@ class SpotSearchViewModel @JvmOverloads constructor(
                 val result = repository.searchSpots(query)
                 android.util.Log.d("SpotSearch", "Results: ${result.spots.size}")
                 _searchResults.value = result.spots
+                analytics.log(AnalyticsEvent.SpotSearchPerformed(query, result.spots.size))
             } catch (e: Exception) {
                 android.util.Log.e("SpotSearch", "Error searching", e)
                 _error.value = e.message ?: "Unknown error"
+                analytics.recordException(e)
             } finally {
                 _loading.value = false
             }

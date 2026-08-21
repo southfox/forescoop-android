@@ -26,14 +26,22 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.ui.common.*
 
 @Composable
+private fun rememberDashboardViewModel(): DashboardViewModel {
+    val application = LocalContext.current.applicationContext as VentusApplication
+    return viewModel(factory = LambdaViewModelFactory { DashboardViewModel(application, application.analytics) })
+}
+
+@Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = viewModel(),
+    viewModel: DashboardViewModel = rememberDashboardViewModel(),
     onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
