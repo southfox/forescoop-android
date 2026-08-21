@@ -19,9 +19,7 @@ import org.forescoop.ventus.data.model.TimeWeatherDeserializer
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
-    private const val BASE_URL = "https://www.windguru.cz/"
-
+class RetrofitClient {
     private val gson = GsonBuilder()
         .registerTypeAdapter(TimeWeather::class.java, TimeWeatherDeserializer())
         .registerTypeAdapter(Forecast::class.java, ForecastDeserializer())
@@ -35,5 +33,9 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(WindguruService::class.java)
+    }
+
+    companion object {
+        private const val BASE_URL = "https://www.windguru.cz/"
     }
 }

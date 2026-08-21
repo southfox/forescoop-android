@@ -10,10 +10,9 @@ package org.forescoop.ventus.domain.repository
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.data.model.SpotInfo
 import org.forescoop.ventus.data.model.SpotResult
-import org.forescoop.ventus.data.remote.RetrofitClient
+import org.forescoop.ventus.data.remote.WindguruService
 
-class WindguruRepository {
-    private val service = RetrofitClient.windguruService
+class WindguruRepository(private val service: WindguruService) {
 
     suspend fun getForecast(spotId: String, modelId: String? = "3"): SpotForecast {
         return service.getForecast(spotId = spotId, modelId = modelId)

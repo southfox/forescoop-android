@@ -31,12 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.SpotForecast
+import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.*
 
 @Composable
 private fun rememberDashboardViewModel(): DashboardViewModel {
     val application = LocalContext.current.applicationContext as VentusApplication
-    return viewModel(factory = LambdaViewModelFactory { DashboardViewModel(application, application.analytics) })
+    return viewModel(factory = LambdaViewModelFactory {
+        DashboardViewModel(application, application.analytics, WindguruRepository(application.windguruService))
+    })
 }
 
 @Composable

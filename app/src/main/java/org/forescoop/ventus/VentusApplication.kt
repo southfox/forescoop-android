@@ -10,13 +10,10 @@ package org.forescoop.ventus
 import android.app.Application
 import org.forescoop.ventus.analytics.AnalyticsLogging
 import org.forescoop.ventus.analytics.FirebaseAnalyticsLogger
+import org.forescoop.ventus.data.remote.RetrofitClient
+import org.forescoop.ventus.data.remote.WindguruService
 
-/**
- * Composition root: creates the app's single [AnalyticsLogging] instance
- * once and hands it down explicitly to ViewModels through their
- * constructors, mirroring how the iOS app's AppDelegate/App structs own a
- * single VentusFirebase instance instead of exposing a static `.shared`.
- */
 class VentusApplication : Application() {
     val analytics: AnalyticsLogging by lazy { FirebaseAnalyticsLogger(this) }
+    val windguruService: WindguruService by lazy { RetrofitClient().windguruService }
 }

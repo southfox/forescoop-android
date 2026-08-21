@@ -34,7 +34,7 @@ sealed class SearchUiState {
 class SpotSearchViewModel(
     application: Application,
     private val analytics: AnalyticsLogging,
-    private val repository: WindguruRepository = WindguruRepository()
+    private val repository: WindguruRepository
 ) : AndroidViewModel(application) {
 
     private val preferenceStore = PreferenceStore(application)

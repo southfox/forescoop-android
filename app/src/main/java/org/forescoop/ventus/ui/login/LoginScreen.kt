@@ -27,7 +27,7 @@ import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 @Composable
 private fun rememberLoginViewModel(): LoginViewModel {
     val application = LocalContext.current.applicationContext as VentusApplication
-    return viewModel(factory = LambdaViewModelFactory { LoginViewModel(application, application.analytics) })
+    return viewModel(factory = LambdaViewModelFactory { LoginViewModel(application, application.analytics, application.windguruService) })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

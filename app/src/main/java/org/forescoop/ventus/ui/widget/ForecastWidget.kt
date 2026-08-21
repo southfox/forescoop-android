@@ -21,6 +21,7 @@ import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.flow.first
 import androidx.glance.action.actionStartActivity
 import org.forescoop.ventus.MainActivity
+import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.data.model.ForecastWidgetEntry
 import org.forescoop.ventus.domain.repository.WindguruRepository
@@ -30,7 +31,8 @@ import org.forescoop.ventus.ui.common.WindSpeedUnit
 
 class ForecastWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val repo = WindguruRepository()
+        val app = context.applicationContext as VentusApplication
+        val repo = WindguruRepository(app.windguruService)
         val prefsStore = PreferenceStore(context)
         
         val lastSpotId = prefsStore.getString("last_spot_id").first() ?: "64141"

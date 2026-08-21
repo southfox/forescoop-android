@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.AccountManager
-import org.forescoop.ventus.data.remote.RetrofitClient
+import org.forescoop.ventus.data.remote.WindguruService
 import org.forescoop.ventus.analytics.AnalyticsEvent
 import org.forescoop.ventus.analytics.AnalyticsLogging
 import org.forescoop.ventus.analytics.log
@@ -27,9 +27,12 @@ sealed class LoginUiState {
     data class Error(val message: String) : LoginUiState()
 }
 
-class LoginViewModel(application: Application, private val analytics: AnalyticsLogging) : AndroidViewModel(application) {
+class LoginViewModel(
+    application: Application,
+    private val analytics: AnalyticsLogging,
+    private val service: WindguruService
+) : AndroidViewModel(application) {
     private val accountManager = AccountManager(application)
-    private val service = RetrofitClient.windguruService
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState

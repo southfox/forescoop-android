@@ -26,19 +26,21 @@ import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
 import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
 import org.forescoop.ventus.ui.login.LoginScreen
+import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val analytics = (application as VentusApplication).analytics
+        val app = application as VentusApplication
+        val analytics = app.analytics
         enableEdgeToEdge()
         setContent {
             VentusTheme {
                 val navController = rememberNavController()
                 val dashboardViewModel: DashboardViewModel = viewModel(
-                    factory = LambdaViewModelFactory { DashboardViewModel(application, analytics) }
+                    factory = LambdaViewModelFactory { DashboardViewModel(app, analytics, WindguruRepository(app.windguruService)) }
                 )
 
                 LaunchedEffect(navController) {

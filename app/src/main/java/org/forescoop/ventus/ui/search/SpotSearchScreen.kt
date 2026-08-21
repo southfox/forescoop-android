@@ -35,12 +35,15 @@ import androidx.compose.ui.text.input.PlatformImeOptions
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.SpotOwner
+import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 
 @Composable
 private fun rememberSpotSearchViewModel(): SpotSearchViewModel {
     val application = LocalContext.current.applicationContext as VentusApplication
-    return viewModel(factory = LambdaViewModelFactory { SpotSearchViewModel(application, application.analytics) })
+    return viewModel(factory = LambdaViewModelFactory {
+        SpotSearchViewModel(application, application.analytics, WindguruRepository(application.windguruService))
+    })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
