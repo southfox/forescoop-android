@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +43,7 @@ fun ForecastGridScreen(
     onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
+    onNavigateToOverview: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -52,7 +54,6 @@ fun ForecastGridScreen(
     isAuthenticated: Boolean,
     onNavigateBack: () -> Unit
 ) {
-    val forecast = spotForecast.forecast ?: return
     val hours = spotForecast.availableForecastHours
     val windUnit by viewModel.windUnit.collectAsState()
     val tempUnit by viewModel.tempUnit.collectAsState()
@@ -63,9 +64,11 @@ fun ForecastGridScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             VentusTopBar(
+                currentRoute = "grid",
                 onNavigateToDashboard = onNavigateToDashboard,
                 onNavigateToGrid = onNavigateToGrid,
                 onNavigateToGraph = onNavigateToGraph,
+                onNavigateToOverview = onNavigateToOverview,
                 onNavigateToSettings = onNavigateToSettings,
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToLogin = onNavigateToLogin,
@@ -99,7 +102,7 @@ fun ForecastGridScreen(
                         .width(100.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    GridLabel("Hour")
+                    GridLabel("Hour", isHeader = true)
                     GridLabel("Wind (${windUnit.label})")
                     GridLabel("Gust (${windUnit.label})")
                     GridLabel("Dir")
@@ -112,7 +115,7 @@ fun ForecastGridScreen(
                 Box(modifier = Modifier.horizontalScroll(rememberScrollState())) {
                     Row {
                         hours.forEach { hour ->
-                            ForecastColumn(hour, forecast, windUnit, tempUnit)
+                            ForecastColumn(hour, spotForecast, windUnit, tempUnit)
                         }
                     }
                 }
@@ -122,10 +125,10 @@ fun ForecastGridScreen(
 }
 
 @Composable
-fun GridLabel(text: String) {
+fun GridLabel(text: String, isHeader: Boolean = false) {
     Box(
         modifier = Modifier
-            .height(30.dp)
+            .height(if (isHeader) 45.dp else 30.dp)
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 8.dp),
@@ -138,12 +141,20 @@ fun GridLabel(text: String) {
 @Composable
 fun ForecastColumn(
     hour: String,
-    forecast: Forecast,
+    spotForecast: SpotForecast,
     windUnit: WindSpeedUnit,
     tempUnit: TemperatureUnit
 ) {
-    Column(modifier = Modifier.width(50.dp)) {
-        DataCell(text = hour, isHeader = true)
+    val forecast = spotForecast.forecast ?: return
+    val currentHour = spotForecast.currentForecastHour
+    val date = spotForecast.forecastDate(hour)
+    val showDay = ForecastDateFormatter.shouldShowDay(hour, currentHour)
+    
+    Column(modifier = Modifier.width(60.dp)) {
+        GridHeaderCell(
+            day = if (showDay) ForecastDateFormatter.formatDay(date) else null,
+            hour = ForecastDateFormatter.formatHour(LocalContext.current, date)
+        )
         
         val rawWind = forecast.windSpeed(hour)
         val windValue = rawWind?.let { Knots(it).value(windUnit) }
@@ -180,6 +191,38 @@ fun ForecastColumn(
             backgroundColor = precip?.let { WeatherColorScale.precipitationColor(it) } ?: Color.Transparent,
             textColor = if (precip != null && precip > 0 && (forecast.temperatureReal(hour) ?: 0.0) <= 0) Color.Blue else Color.Unspecified
         )
+    }
+}
+
+@Composable
+fun GridHeaderCell(day: String?, hour: String) {
+    Box(
+        modifier = Modifier
+            .height(45.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = day ?: " ",
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 9.sp,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                maxLines = 1
+            )
+            Text(
+                text = hour,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                maxLines = 1
+            )
+        }
     }
 }
 

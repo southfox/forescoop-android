@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import org.forescoop.ventus.ui.dashboard.DashboardScreen
 import org.forescoop.ventus.ui.forecast.ForecastGridScreen
 import org.forescoop.ventus.ui.theme.VentusTheme
@@ -25,11 +26,11 @@ import org.forescoop.ventus.ui.dashboard.DashboardUiState
 import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
 import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
+import org.forescoop.ventus.ui.forecast.OverviewScreen
 import org.forescoop.ventus.ui.login.LoginScreen
 import org.forescoop.ventus.ui.profile.ProfileScreen
 import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
-import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,15 +55,23 @@ class MainActivity : ComponentActivity() {
                     composable("dashboard") {
                         DashboardScreen(
                             viewModel = dashboardViewModel,
-                            onNavigateToDashboard = {
-                                if (navController.currentDestination?.route != "dashboard") {
-                                    navController.navigate("dashboard") {
-                                        popUpTo("dashboard") { inclusive = true }
-                                    }
-                                }
-                            },
+                            onNavigateToDashboard = {},
                             onNavigateToGrid = {
                                 navController.navigate("grid") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onNavigateToGraph = {
+                                navController.navigate("graph") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onNavigateToOverview = {
+                                navController.navigate("overview") {
                                     popUpTo("dashboard") { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
@@ -73,13 +82,6 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToSearch = {
                                 navController.navigate("search")
-                            },
-                            onNavigateToGraph = {
-                                navController.navigate("graph") {
-                                    popUpTo("dashboard") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
                             },
                             onNavigateToLogin = {
                                 navController.navigate("login")
@@ -108,6 +110,13 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
+                                onNavigateToOverview = {
+                                    navController.navigate("overview") {
+                                        popUpTo("dashboard") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
                                 },
@@ -129,6 +138,44 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                    }
+                    composable("overview") {
+                        OverviewScreen(
+                            viewModel = dashboardViewModel,
+                            onNavigateToDashboard = {
+                                navController.navigate("dashboard") {
+                                    popUpTo("dashboard") { inclusive = true }
+                                }
+                            },
+                            onNavigateToGrid = {
+                                navController.navigate("grid") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onNavigateToGraph = {
+                                navController.navigate("graph") {
+                                    popUpTo("dashboard") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            onNavigateToOverview = {},
+                            onNavigateToSettings = {
+                                navController.navigate("settings")
+                            },
+                            onNavigateToSearch = {
+                                navController.navigate("search")
+                            },
+                            onNavigateToLogin = {
+                                navController.navigate("login")
+                            },
+                            onNavigateToProfile = {
+                                navController.navigate("profile")
+                            },
+                            onLogout = { dashboardViewModel.logout() }
+                        )
                     }
                     composable("settings") {
                         SettingsScreen(
@@ -175,6 +222,13 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToGrid = {
                                     navController.navigate("grid") {
+                                        popUpTo("dashboard") { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                onNavigateToOverview = {
+                                    navController.navigate("overview") {
                                         popUpTo("dashboard") { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true

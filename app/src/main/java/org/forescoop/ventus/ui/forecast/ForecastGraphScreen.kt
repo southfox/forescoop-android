@@ -49,6 +49,7 @@ fun ForecastGraphScreen(
     onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
+    onNavigateToOverview: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -67,9 +68,11 @@ fun ForecastGraphScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             VentusTopBar(
+                currentRoute = "graph",
                 onNavigateToDashboard = onNavigateToDashboard,
                 onNavigateToGrid = onNavigateToGrid,
                 onNavigateToGraph = onNavigateToGraph,
+                onNavigateToOverview = onNavigateToOverview,
                 onNavigateToSettings = onNavigateToSettings,
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToLogin = onNavigateToLogin,

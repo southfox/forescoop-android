@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ShowChart
+import androidx.compose.material.icons.automirrored.filled.ViewQuilt
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,9 +24,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun VentusTopBar(
+    currentRoute: String,
     onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
+    onNavigateToOverview: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -57,21 +60,34 @@ fun VentusTopBar(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Forecast Grid") },
-                        onClick = { showMenu = false; onNavigateToGrid() },
-                        leadingIcon = { Icon(Icons.Default.TableChart, contentDescription = null) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Forecast Graph") },
-                        onClick = { showMenu = false; onNavigateToGraph() },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Overview") },
-                        onClick = { showMenu = false; onNavigateToDashboard() },
-                        leadingIcon = { Icon(Icons.Default.Dashboard, contentDescription = null) }
-                    )
+                    if (currentRoute != "dashboard") {
+                        DropdownMenuItem(
+                            text = { Text("Forecast Dashboard") },
+                            onClick = { showMenu = false; onNavigateToDashboard() },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.ViewQuilt, contentDescription = null) }
+                        )
+                    }
+                    if (currentRoute != "grid") {
+                        DropdownMenuItem(
+                            text = { Text("Forecast Grid") },
+                            onClick = { showMenu = false; onNavigateToGrid() },
+                            leadingIcon = { Icon(Icons.Default.TableChart, contentDescription = null) }
+                        )
+                    }
+                    if (currentRoute != "graph") {
+                        DropdownMenuItem(
+                            text = { Text("Forecast Graph") },
+                            onClick = { showMenu = false; onNavigateToGraph() },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }
+                        )
+                    }
+                    if (currentRoute != "overview") {
+                        DropdownMenuItem(
+                            text = { Text("Overview") },
+                            onClick = { showMenu = false; onNavigateToOverview() },
+                            leadingIcon = { Icon(Icons.Default.GridView, contentDescription = null) }
+                        )
+                    }
                     HorizontalDivider()
                     DropdownMenuItem(
                         text = { Text("Settings") },

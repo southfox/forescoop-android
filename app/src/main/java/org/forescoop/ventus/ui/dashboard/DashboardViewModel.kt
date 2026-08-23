@@ -38,7 +38,8 @@ sealed class DashboardUiState {
         val tempUnit: TemperatureUnit,
         val isFavorite: Boolean,
         val summary: String,
-        val isAuthenticated: Boolean
+        val isAuthenticated: Boolean,
+        val selectedHour: String?
     ) : DashboardUiState()
     data class Error(val message: String) : DashboardUiState()
 }
@@ -52,6 +53,7 @@ class DashboardViewModel(
     private val accountManager = (application as VentusApplication).accountManager
     private val preferenceStore = PreferenceStore(application)
     private val _spotForecast = MutableStateFlow<SpotForecast?>(null)
+    private val _selectedHour = MutableStateFlow<String?>(null)
     private val _error = MutableStateFlow<String?>(null)
     private val _loading = MutableStateFlow(true)
 
@@ -71,27 +73,29 @@ class DashboardViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val uiState: StateFlow<DashboardUiState> = combine(
-        _spotForecast, windUnit, tempUnit, favorites, isAuthenticated, _error, _loading
+        _spotForecast, _selectedHour, windUnit, tempUnit, favorites, isAuthenticated, _error, _loading
     ) { args ->
         val forecast = args[0] as? SpotForecast
-        val wind = args[1] as WindSpeedUnit
-        val temp = args[2] as TemperatureUnit
-        val favs = args[3] as Set<String>
-        val auth = args[4] as Boolean
-        val error = args[5] as? String
-        val loading = args[6] as Boolean
+        val hourOverride = args[1] as? String
+        val wind = args[2] as WindSpeedUnit
+        val temp = args[3] as TemperatureUnit
+        val favs = args[4] as Set<String>
+        val auth = args[5] as Boolean
+        val error = args[6] as? String
+        val loading = args[7] as Boolean
 
         when {
             error != null -> DashboardUiState.Error(error)
             loading || forecast == null -> DashboardUiState.Loading
             else -> {
+                val hour = hourOverride ?: forecast.currentForecastHour
                 val summary = ForecastIntelligence.detailedSummary(
                     context = getApplication(),
                     forecast = forecast,
-                    hour = forecast.currentForecastHour,
+                    hour = hour,
                     prefs = ForecastUnitPreferences(temperatureUnit = temp, windSpeedUnit = wind)
                 )
-                DashboardUiState.Success(forecast, wind, temp, favs.contains(forecast.idSpot), summary, auth)
+                DashboardUiState.Success(forecast, wind, temp, favs.contains(forecast.idSpot), summary, auth, hour)
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
@@ -112,6 +116,7 @@ class DashboardViewModel(
         viewModelScope.launch {
             _loading.value = true
             _error.value = null
+            _selectedHour.value = null // Reset selected hour for new spot
             try {
                 val username = accountManager.getUsername()
                 val password = accountManager.getPassword()()
@@ -156,6 +161,30 @@ class DashboardViewModel(
                 preferenceStore.removeFavorite(spotId)
             }
             analytics.log(AnalyticsEvent.FavoriteToggled(spotId, willBeFavorite))
+        }
+    }
+
+    fun selectHour(hour: String) {
+        _selectedHour.value = hour
+    }
+
+    fun nextHour() {
+        val forecast = _spotForecast.value ?: return
+        val hours = forecast.availableForecastHours
+        val current = _selectedHour.value ?: forecast.currentForecastHour ?: return
+        val index = hours.indexOf(current)
+        if (index != -1 && index < hours.size - 1) {
+            _selectedHour.value = hours[index + 1]
+        }
+    }
+
+    fun previousHour() {
+        val forecast = _spotForecast.value ?: return
+        val hours = forecast.availableForecastHours
+        val current = _selectedHour.value ?: forecast.currentForecastHour ?: return
+        val index = hours.indexOf(current)
+        if (index > 0) {
+            _selectedHour.value = hours[index - 1]
         }
     }
 

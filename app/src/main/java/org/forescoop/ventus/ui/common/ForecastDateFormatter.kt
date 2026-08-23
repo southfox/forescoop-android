@@ -1,0 +1,38 @@
+//
+//  ForecastDateFormatter.kt
+//  Ventus
+//
+//  Created by Javier Fuchs on 2026-08-23.
+//  Copyright © 2026 Mobile Patagonia. All rights reserved.
+//
+
+package org.forescoop.ventus.ui.common
+
+import android.content.Context
+import android.text.format.DateFormat
+import org.forescoop.ventus.data.model.SpotForecast
+import java.text.SimpleDateFormat
+import java.util.*
+
+object ForecastDateFormatter {
+    fun formatHour(context: Context, date: Date?): String {
+        if (date == null) return "--"
+        val is24Hour = DateFormat.is24HourFormat(context)
+        return if (is24Hour) {
+            SimpleDateFormat("H", Locale.getDefault()).format(date) + "h"
+        } else {
+            // Using "h a" results in "1 PM". User said "am/pm", let's use "h a" but lowercase or uppercase? 
+            // Most Android systems use uppercase "AM/PM" with "a".
+            SimpleDateFormat("h a", Locale.getDefault()).format(date)
+        }
+    }
+
+    fun formatDay(date: Date?): String {
+        if (date == null) return ""
+        return SimpleDateFormat("EEE d", Locale.getDefault()).format(date)
+    }
+
+    fun shouldShowDay(hour: String, currentHour: String?): Boolean {
+        return hour != currentHour
+    }
+}
