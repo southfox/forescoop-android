@@ -26,7 +26,6 @@ import org.forescoop.ventus.ui.dashboard.DashboardUiState
 import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
 import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
-import org.forescoop.ventus.ui.forecast.OverviewScreen
 import org.forescoop.ventus.ui.login.LoginScreen
 import org.forescoop.ventus.ui.profile.ProfileScreen
 import org.forescoop.ventus.domain.repository.WindguruRepository
@@ -70,13 +69,6 @@ class MainActivity : ComponentActivity() {
                                     restoreState = true
                                 }
                             },
-                            onNavigateToOverview = {
-                                navController.navigate("overview") {
-                                    popUpTo("dashboard") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
                             onNavigateToSettings = {
                                 navController.navigate("settings")
                             },
@@ -110,13 +102,6 @@ class MainActivity : ComponentActivity() {
                                         restoreState = true
                                     }
                                 },
-                                onNavigateToOverview = {
-                                    navController.navigate("overview") {
-                                        popUpTo("dashboard") { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
                                 },
@@ -138,44 +123,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                    }
-                    composable("overview") {
-                        OverviewScreen(
-                            viewModel = dashboardViewModel,
-                            onNavigateToDashboard = {
-                                navController.navigate("dashboard") {
-                                    popUpTo("dashboard") { inclusive = true }
-                                }
-                            },
-                            onNavigateToGrid = {
-                                navController.navigate("grid") {
-                                    popUpTo("dashboard") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            onNavigateToGraph = {
-                                navController.navigate("graph") {
-                                    popUpTo("dashboard") { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            onNavigateToOverview = {},
-                            onNavigateToSettings = {
-                                navController.navigate("settings")
-                            },
-                            onNavigateToSearch = {
-                                navController.navigate("search")
-                            },
-                            onNavigateToLogin = {
-                                navController.navigate("login")
-                            },
-                            onNavigateToProfile = {
-                                navController.navigate("profile")
-                            },
-                            onLogout = { dashboardViewModel.logout() }
-                        )
                     }
                     composable("settings") {
                         SettingsScreen(
@@ -222,13 +169,6 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToGrid = {
                                     navController.navigate("grid") {
-                                        popUpTo("dashboard") { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
-                                onNavigateToOverview = {
-                                    navController.navigate("overview") {
                                         popUpTo("dashboard") { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true

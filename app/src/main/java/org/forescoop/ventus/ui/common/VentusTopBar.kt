@@ -28,7 +28,6 @@ fun VentusTopBar(
     onNavigateToDashboard: () -> Unit,
     onNavigateToGrid: () -> Unit,
     onNavigateToGraph: () -> Unit,
-    onNavigateToOverview: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
@@ -79,13 +78,6 @@ fun VentusTopBar(
                             text = { Text("Forecast Graph") },
                             onClick = { showMenu = false; onNavigateToGraph() },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }
-                        )
-                    }
-                    if (currentRoute != "overview") {
-                        DropdownMenuItem(
-                            text = { Text("Overview") },
-                            onClick = { showMenu = false; onNavigateToOverview() },
-                            leadingIcon = { Icon(Icons.Default.GridView, contentDescription = null) }
                         )
                     }
                     HorizontalDivider()

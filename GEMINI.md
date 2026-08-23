@@ -28,7 +28,7 @@ The following improvements were made manually or in a parallel session:
 ## Project Status
 
 - [x] Core Data Layer (Retrofit, Repository, GSON Adapters)
-- [x] Dashboard / Overview Screen
+- [x] Dashboard Screen (Detailed Weather, Wind & Interactive Timeline)
 - [x] Forecast Grid Screen (Dense Metric Table)
 - [x] Forecast Graph Screen (Compose Canvas)
 - [x] Animated Weather Backgrounds
