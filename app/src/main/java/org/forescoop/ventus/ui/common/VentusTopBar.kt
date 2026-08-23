@@ -11,6 +11,7 @@ package org.forescoop.ventus.ui.common
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -28,8 +29,11 @@ fun VentusTopBar(
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onLogout: () -> Unit,
     onToggleFavorite: () -> Unit,
-    isFavorite: Boolean
+    isFavorite: Boolean,
+    isAuthenticated: Boolean
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -85,11 +89,24 @@ fun VentusTopBar(
                         leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) }
                     )
                     HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("Login") },
-                        onClick = { showMenu = false; onNavigateToLogin() },
-                        leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
-                    )
+                    if (isAuthenticated) {
+                        DropdownMenuItem(
+                            text = { Text("Profile") },
+                            onClick = { showMenu = false; onNavigateToProfile() },
+                            leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Logout", color = Color.Red) },
+                            onClick = { showMenu = false; onLogout() },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = Color.Red) }
+                        )
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text("Login") },
+                            onClick = { showMenu = false; onNavigateToLogin() },
+                            leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
+                        )
+                    }
                 }
             }
 

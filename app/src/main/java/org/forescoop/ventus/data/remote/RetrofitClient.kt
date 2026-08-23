@@ -8,14 +8,9 @@
 package org.forescoop.ventus.data.remote
 
 import com.google.gson.GsonBuilder
-import org.forescoop.ventus.data.model.Forecast
-import org.forescoop.ventus.data.model.ForecastDeserializer
-import org.forescoop.ventus.data.model.SpotForecast
-import org.forescoop.ventus.data.model.SpotForecastDeserializer
-import org.forescoop.ventus.data.model.SpotResult
-import org.forescoop.ventus.data.model.SpotResultDeserializer
-import org.forescoop.ventus.data.model.TimeWeather
-import org.forescoop.ventus.data.model.TimeWeatherDeserializer
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import org.forescoop.ventus.data.model.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -27,9 +22,16 @@ class RetrofitClient {
         .registerTypeAdapter(SpotResult::class.java, SpotResultDeserializer())
         .create()
 
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        })
+        .build()
+
     val windguruService: WindguruService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(WindguruService::class.java)

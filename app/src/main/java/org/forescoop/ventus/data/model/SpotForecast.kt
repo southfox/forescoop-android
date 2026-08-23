@@ -156,8 +156,12 @@ class SpotForecastDeserializer : JsonDeserializer<SpotForecast> {
     ): SpotForecast {
         val jsonObject = json.asJsonObject
         
-        // Deserialize base SpotInfo fields manually or via context if possible.
-        // For simplicity, let's pull them directly.
+        // Check for Windguru API errors
+        if (jsonObject.has("return") && jsonObject.get("return").asString == "error") {
+            val msg = jsonObject.get("error_message")?.asString ?: "Windguru API Error"
+            throw RuntimeException(msg)
+        }
+
         val idSpot = jsonObject.get("id_spot")?.asString
         val spotName = jsonObject.get("spotname")?.asString
         val country = jsonObject.get("country")?.asString
@@ -175,13 +179,24 @@ class SpotForecastDeserializer : JsonDeserializer<SpotForecast> {
         val tz = jsonObject.get("tz")?.asString
 
         val forecasts = mutableListOf<ForecastModel>()
-        jsonObject.get("forecast")?.asJsonObject?.entrySet()?.forEach { entry ->
+        val forecastJsonElement = jsonObject.get("forecast") ?: jsonObject.get("fcst")
+        val forecastJson = if (forecastJsonElement != null && forecastJsonElement.isJsonObject) {
+            forecastJsonElement.asJsonObject
+        } else {
+            null
+        }
+        
+        forecastJson?.entrySet()?.forEach { entry ->
             val modelId = entry.key
-            val info = entry.value.asJsonObject
-            if (info.has(TypeOfWeather.WINDSPD.name)) {
-                val forecast = context.deserialize<Forecast>(info, Forecast::class.java)
-                forecast.gmtHourOffset = gmtHourOffset
-                forecasts.add(ForecastModel(modelId, forecast))
+            val info = if (entry.value.isJsonObject) entry.value.asJsonObject else null
+            
+            if (info != null) {
+                // In PRO mode, metrics are often arrays. info.has(...) works for both.
+                if (info.has(TypeOfWeather.WINDSPD.name) || info.has(TypeOfWeather.WINDSPD.name.lowercase())) {
+                    val forecast = context.deserialize<Forecast>(info, Forecast::class.java)
+                    forecast.gmtHourOffset = gmtHourOffset
+                    forecasts.add(ForecastModel(modelId, forecast))
+                }
             }
         }
         

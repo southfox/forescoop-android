@@ -15,8 +15,9 @@ import kotlinx.coroutines.flow.first
 import org.forescoop.ventus.data.local.PreferenceStore
 import org.forescoop.ventus.data.local.SecureCredentialStore
 import org.forescoop.ventus.data.model.User
+import org.forescoop.ventus.data.remote.WindguruService
 
-class AccountManager(context: Context) {
+class AccountManager private constructor(context: Context, private val service: WindguruService) {
     private val preferenceStore = PreferenceStore(context)
     private val secureStore = SecureCredentialStore(context)
 
@@ -28,12 +29,31 @@ class AccountManager(context: Context) {
 
     suspend fun initialize() {
         val username = preferenceStore.getString("active_username").first()
-        if (username != null) {
+        if (!username.isNullOrEmpty()) {
             val password = secureStore.getPassword(username)
             if (password != null) {
-                // In a real app, we might verify or fetch profile here
-                _isPro.value = preferenceStore.getString("is_pro").first() == "true"
+                try {
+                    refreshProfile()
+                } catch (e: Exception) {
+                    // Fallback to cached pro status if refresh fails
+                    _isPro.value = preferenceStore.getString("is_pro").first() == "true"
+                }
             }
+        }
+    }
+
+    suspend fun refreshProfile() {
+        val username = preferenceStore.getString("active_username").first() ?: return
+        val password = secureStore.getPassword(username) ?: return
+        
+        try {
+            val user = service.login(username = username, password = password)
+            _currentUser.value = user
+            _isPro.value = user.isPro
+            preferenceStore.saveString("is_pro", if (user.isPro) "true" else "false")
+        } catch (e: Exception) {
+            // Log error or handle refresh failure
+            throw e
         }
     }
 
@@ -49,7 +69,9 @@ class AccountManager(context: Context) {
 
     suspend fun signOut() {
         val username = preferenceStore.getString("active_username").first()
-        username?.let { secureStore.removePassword(it) }
+        if (!username.isNullOrEmpty()) {
+            secureStore.removePassword(username)
+        }
         preferenceStore.saveString("active_username", "")
         preferenceStore.saveString("is_pro", "false")
         _currentUser.value = null
@@ -58,8 +80,19 @@ class AccountManager(context: Context) {
 
     fun getPassword(): suspend () -> String? = {
         val username = preferenceStore.getString("active_username").first()
-        username?.let { secureStore.getPassword(it) }
+        if (username.isNullOrEmpty()) null else secureStore.getPassword(username)
     }
     
     suspend fun getUsername(): String? = preferenceStore.getString("active_username").first()
+
+    companion object {
+        @Volatile
+        private var instance: AccountManager? = null
+
+        fun getInstance(context: Context, service: WindguruService): AccountManager {
+            return instance ?: synchronized(this) {
+                instance ?: AccountManager(context.applicationContext, service).also { instance = it }
+            }
+        }
+    }
 }

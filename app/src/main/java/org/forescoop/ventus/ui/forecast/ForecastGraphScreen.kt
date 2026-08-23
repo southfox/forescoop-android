@@ -52,8 +52,11 @@ fun ForecastGraphScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+    onLogout: () -> Unit,
     onToggleFavorite: () -> Unit,
     isFavorite: Boolean,
+    isAuthenticated: Boolean,
     onNavigateBack: () -> Unit
 ) {
     val points = remember(spotForecast) { createPoints(spotForecast) }
@@ -70,8 +73,11 @@ fun ForecastGraphScreen(
                 onNavigateToSettings = onNavigateToSettings,
                 onNavigateToSearch = onNavigateToSearch,
                 onNavigateToLogin = onNavigateToLogin,
+                onNavigateToProfile = onNavigateToProfile,
+                onLogout = onLogout,
                 onToggleFavorite = onToggleFavorite,
-                isFavorite = isFavorite
+                isFavorite = isFavorite,
+                isAuthenticated = isAuthenticated
             )
             
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {

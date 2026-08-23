@@ -14,7 +14,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import org.forescoop.ventus.data.AccountManager
+import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.remote.WindguruService
 import org.forescoop.ventus.analytics.AnalyticsEvent
 import org.forescoop.ventus.analytics.AnalyticsLogging
@@ -32,7 +32,7 @@ class LoginViewModel(
     private val analytics: AnalyticsLogging,
     private val service: WindguruService
 ) : AndroidViewModel(application) {
-    private val accountManager = AccountManager(application)
+    private val accountManager = (application as VentusApplication).accountManager
 
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val uiState: StateFlow<LoginUiState> = _uiState
@@ -47,17 +47,8 @@ class LoginViewModel(
             _uiState.value = LoginUiState.Loading
             analytics.log(AnalyticsEvent.LoginAttempted)
             try {
-                // In a real port, we'd call the login endpoint.
-                // RetrofitClient/WindguruService doesn't have it yet, so we add it or mock it.
-                // For now, let's assume successful login if we can fetch user profile.
-                // Or better, let's just mock it for now since we need to update WindguruService.
-
-                // MOCK SUCCESS for this step
-                val mockUser = org.forescoop.ventus.data.model.User(
-                    username = username,
-                    pro = 0
-                )
-                accountManager.signIn(mockUser, password)
+                val user = service.login(username = username, password = password)
+                accountManager.signIn(user, password)
                 _uiState.value = LoginUiState.Success
                 analytics.log(AnalyticsEvent.LoginSucceeded)
             } catch (e: Exception) {

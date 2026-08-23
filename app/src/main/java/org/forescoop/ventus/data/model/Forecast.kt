@@ -32,7 +32,10 @@ class Forecast(
     var gmtHourOffset: Int = 0
 
     val availableHours: List<String>
-        get() = weathers[TypeOfWeather.WINDSPD.name]?.orderedKeys ?: emptyList()
+        get() {
+            val weather = weathers[TypeOfWeather.WINDSPD.name] ?: weathers[TypeOfWeather.WINDSPD.name.lowercase()]
+            return weather?.orderedKeys ?: emptyList()
+        }
 
     val stepIntervalHours: Int
         get() {
@@ -53,25 +56,30 @@ class Forecast(
         return x
     }
 
-    fun windDirectionName(hh: String?): String? = weathers[TypeOfWeather.WINDIRNAME.name]?.value(hh)
-    fun windDirection(hh: String?): Double? = weathers[TypeOfWeather.WINDDIR.name]?.value(hh)
-    fun windSpeed(hh: String?): Double? = weathers[TypeOfWeather.WINDSPD.name]?.value(hh)
-    fun temperature(hh: String?): Double? = weathers[TypeOfWeather.TMP.name]?.value(hh)
-    fun temperatureReal(hh: String?): Double? = weathers[TypeOfWeather.TMPE.name]?.value(hh)
-    fun cloudCoverTotal(hh: String?): Int? = weathers[TypeOfWeather.TCDC.name]?.value<Double>(hh)?.toInt()
-    fun cloudCoverHigh(hh: String?): Int? = weathers[TypeOfWeather.HCDC.name]?.value<Double>(hh)?.toInt()
-    fun cloudCoverMid(hh: String?): Int? = weathers[TypeOfWeather.MCDC.name]?.value<Double>(hh)?.toInt()
-    fun cloudCoverLow(hh: String?): Int? = weathers[TypeOfWeather.LCDC.name]?.value<Double>(hh)?.toInt()
-    fun relativeHumidity(hh: String?): Int? = weathers[TypeOfWeather.RH.name]?.value<Double>(hh)?.toInt()
+    private fun <T> getWeatherValue(type: TypeOfWeather, hh: String?): T? {
+        val weather = weathers[type.name] ?: weathers[type.name.lowercase()]
+        return weather?.value(hh)
+    }
+
+    fun windDirectionName(hh: String?): String? = getWeatherValue(TypeOfWeather.WINDIRNAME, hh)
+    fun windDirection(hh: String?): Double? = getWeatherValue(TypeOfWeather.WINDDIR, hh)
+    fun windSpeed(hh: String?): Double? = getWeatherValue(TypeOfWeather.WINDSPD, hh)
+    fun temperature(hh: String?): Double? = getWeatherValue(TypeOfWeather.TMP, hh)
+    fun temperatureReal(hh: String?): Double? = getWeatherValue(TypeOfWeather.TMPE, hh)
+    fun cloudCoverTotal(hh: String?): Int? = getWeatherValue<Double>(TypeOfWeather.TCDC, hh)?.toInt()
+    fun cloudCoverHigh(hh: String?): Int? = getWeatherValue<Double>(TypeOfWeather.HCDC, hh)?.toInt()
+    fun cloudCoverMid(hh: String?): Int? = getWeatherValue<Double>(TypeOfWeather.MCDC, hh)?.toInt()
+    fun cloudCoverLow(hh: String?): Int? = getWeatherValue<Double>(TypeOfWeather.LCDC, hh)?.toInt()
+    fun relativeHumidity(hh: String?): Int? = getWeatherValue<Double>(TypeOfWeather.RH, hh)?.toInt()
     
     fun windGusts(hh: String?): Double? {
-        val knots = weathers[TypeOfWeather.GUST.name]?.value<Double>(hh) ?: return null
+        val knots = windGustsKnots(hh) ?: return null
         return knots * 1.852 // conversion to kmh as in iOS
     }
 
-    fun windGustsKnots(hh: String?): Double? = weathers[TypeOfWeather.GUST.name]?.value(hh)
-    fun seaLevelPressure(hh: String?): Double? = weathers[TypeOfWeather.SLP.name]?.value(hh)
-    fun freezingLevelHeightInMeters(hh: String?): Double? = weathers[TypeOfWeather.FLHGT.name]?.value(hh)
+    fun windGustsKnots(hh: String?): Double? = getWeatherValue(TypeOfWeather.GUST, hh)
+    fun seaLevelPressure(hh: String?): Double? = getWeatherValue(TypeOfWeather.SLP, hh)
+    fun freezingLevelHeightInMeters(hh: String?): Double? = getWeatherValue(TypeOfWeather.FLHGT, hh)
 
     fun windChill(hh: String?): Double? {
         val celsius = temperatureReal(hh) ?: temperature(hh) ?: return null
@@ -82,17 +90,17 @@ class Forecast(
         return 13.12 + 0.6215 * celsius - 11.37 * windFactor + 0.3965 * celsius * windFactor
     }
 
-    fun precipitation(hh: String?): Double? = weathers[TypeOfWeather.APCP.name]?.value(hh)
-    fun precipitation1(hh: String?): Double? = weathers[TypeOfWeather.APCP1.name]?.value(hh)
+    fun precipitation(hh: String?): Double? = getWeatherValue(TypeOfWeather.APCP, hh)
+    fun precipitation1(hh: String?): Double? = getWeatherValue(TypeOfWeather.APCP1, hh)
 
     fun waveHeight(hh: String?): Double? =
-        weathers[TypeOfWeather.HTSGW.name]?.value<Double>(hh) ?: weathers[TypeOfWeather.WVHGT.name]?.value(hh)
+        getWeatherValue<Double>(TypeOfWeather.HTSGW, hh) ?: getWeatherValue(TypeOfWeather.WVHGT, hh)
 
     fun wavePeriod(hh: String?): Double? =
-        weathers[TypeOfWeather.PERPW.name]?.value<Double>(hh) ?: weathers[TypeOfWeather.WVPER.name]?.value(hh)
+        getWeatherValue<Double>(TypeOfWeather.PERPW, hh) ?: getWeatherValue(TypeOfWeather.WVPER, hh)
 
     fun waveDirection(hh: String?): Double? =
-        weathers[TypeOfWeather.DIRPW.name]?.value<Double>(hh) ?: weathers[TypeOfWeather.WVDIR.name]?.value(hh)
+        getWeatherValue<Double>(TypeOfWeather.DIRPW, hh) ?: getWeatherValue(TypeOfWeather.WVDIR, hh)
 
     override fun toString(): String {
         return "Forecast\n$initStamp\n$initDate\n$modelName\n" +
@@ -112,10 +120,36 @@ class ForecastDeserializer : JsonDeserializer<Forecast> {
         val modelName = jsonObject.get("model_name")?.asString
         
         val weathers = mutableMapOf<String, TimeWeather>()
+        
+        // Check if we have an "hours" array (typical for PRO/wforecast responses)
+        val hoursArray = jsonObject.get("hours")?.asJsonArray
+        val hourStrings = hoursArray?.map { it.asString }
+        
         for (entry in jsonObject.entrySet()) {
-            if (entry.key != "model_name" && entry.key != "initstamp" && entry.key != "initdate") {
-                if (entry.value.isJsonObject) {
-                    weathers[entry.key] = context.deserialize(entry.value, TimeWeather::class.java)
+            val key = entry.key.uppercase()
+            if (key == "MODEL_NAME" || key == "INITSTAMP" || key == "INITDATE" || key == "HOURS") continue
+            
+            val value = entry.value
+            when {
+                value.isJsonObject -> {
+                    weathers[key] = context.deserialize(value, TimeWeather::class.java)
+                }
+                value.isJsonArray && hourStrings != null -> {
+                    // Convert array to TimeWeather using hour offsets
+                    val array = value.asJsonArray
+                    val info = mutableMapOf<String, Any>()
+                    for (i in 0 until minOf(array.size(), hourStrings.size)) {
+                        val element = array.get(i)
+                        if (element.isJsonPrimitive) {
+                            val primitive = element.asJsonPrimitive
+                            when {
+                                primitive.isNumber -> info[hourStrings[i]] = primitive.asDouble
+                                primitive.isBoolean -> info[hourStrings[i]] = primitive.asBoolean
+                                primitive.isString -> info[hourStrings[i]] = primitive.asString
+                            }
+                        }
+                    }
+                    weathers[key] = TimeWeather(info)
                 }
             }
         }

@@ -26,6 +26,7 @@ import org.forescoop.ventus.ui.settings.SettingsScreen
 import org.forescoop.ventus.ui.search.SpotSearchScreen
 import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
 import org.forescoop.ventus.ui.login.LoginScreen
+import org.forescoop.ventus.ui.profile.ProfileScreen
 import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +83,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onNavigateToLogin = {
                                 navController.navigate("login")
+                            },
+                            onNavigateToProfile = {
+                                navController.navigate("profile")
                             }
                         )
                     }
@@ -113,8 +117,13 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLogin = {
                                     navController.navigate("login")
                                 },
+                                onNavigateToProfile = {
+                                    navController.navigate("profile")
+                                },
+                                onLogout = { dashboardViewModel.logout() },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
                                 isFavorite = success.isFavorite,
+                                isAuthenticated = success.isAuthenticated,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }
@@ -141,6 +150,13 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("login") {
                         LoginScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
+                    }
+                    composable("profile") {
+                        ProfileScreen(
                             onNavigateBack = {
                                 navController.popBackStack()
                             }
@@ -174,8 +190,13 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLogin = {
                                     navController.navigate("login")
                                 },
+                                onNavigateToProfile = {
+                                    navController.navigate("profile")
+                                },
+                                onLogout = { dashboardViewModel.logout() },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
                                 isFavorite = success.isFavorite,
+                                isAuthenticated = success.isAuthenticated,
                                 onNavigateBack = {
                                     navController.popBackStack()
                                 }

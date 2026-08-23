@@ -25,7 +25,30 @@ class TimeWeather(
     @Suppress("UNCHECKED_CAST")
     fun <T> value(hh: String?): T? {
         if (hh == null) return null
-        return info[hh] as? T
+        val v = info[hh] ?: return null
+        
+        return try {
+            // First try direct cast
+            v as? T
+        } catch (e: Exception) {
+            null
+        } ?: run {
+            // If cast fails, try manual conversion for common types
+            val str = v.toString()
+            val d = str.toDoubleOrNull() ?: return null
+            
+            // Try to return as Double or Int depending on what might be expected
+            // Since we can't check T easily, we try to cast to Double or Int
+            try {
+                d as? T
+            } catch (e: Exception) {
+                try {
+                    d.toInt() as? T
+                } catch (e2: Exception) {
+                    null
+                }
+            }
+        }
     }
 
     override fun toString(): String {
