@@ -32,7 +32,15 @@ object ForecastDateFormatter {
         return SimpleDateFormat("EEE d", Locale.getDefault()).format(date)
     }
 
-    fun shouldShowDay(hour: String, currentHour: String?): Boolean {
-        return hour != currentHour
+    fun isToday(date: Date?): Boolean {
+        if (date == null) return false
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply { time = date }
+        return now.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
+                now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+    }
+
+    fun shouldShowDay(date: Date?): Boolean {
+        return !isToday(date)
     }
 }

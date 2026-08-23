@@ -33,7 +33,6 @@ fun ForecastHourSelector(
     onHourSelected: (String) -> Unit
 ) {
     val hours = forecast.availableForecastHours
-    val currentHour = forecast.currentForecastHour
     val listState = rememberLazyListState()
     val context = LocalContext.current
 
@@ -57,7 +56,7 @@ fun ForecastHourSelector(
         items(hours) { hour ->
             val isSelected = hour == selectedHour
             val date = forecast.forecastDate(hour)
-            val showDay = ForecastDateFormatter.shouldShowDay(hour, currentHour)
+            val showDay = ForecastDateFormatter.shouldShowDay(date)
             
             Column(
                 modifier = Modifier

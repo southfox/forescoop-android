@@ -144,9 +144,8 @@ fun ForecastColumn(
     tempUnit: TemperatureUnit
 ) {
     val forecast = spotForecast.forecast ?: return
-    val currentHour = spotForecast.currentForecastHour
     val date = spotForecast.forecastDate(hour)
-    val showDay = ForecastDateFormatter.shouldShowDay(hour, currentHour)
+    val showDay = ForecastDateFormatter.shouldShowDay(date)
     
     Column(modifier = Modifier.width(60.dp)) {
         GridHeaderCell(
