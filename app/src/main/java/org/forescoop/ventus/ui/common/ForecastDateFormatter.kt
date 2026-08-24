@@ -15,32 +15,52 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object ForecastDateFormatter {
-    fun formatHour(context: Context, date: Date?): String {
+    fun formatHour(context: Context, date: Date?, timeZone: String? = null): String {
         if (date == null) return "--"
+        val tz = if (timeZone != null) TimeZone.getTimeZone(timeZone) else TimeZone.getDefault()
+        
+        val calendar = Calendar.getInstance(tz).apply { time = date }
         val is24Hour = DateFormat.is24HourFormat(context)
-        return if (is24Hour) {
-            SimpleDateFormat("H", Locale.getDefault()).format(date) + "h"
-        } else {
-            // Using "h a" results in "1 PM". User said "am/pm", let's use "h a" but lowercase or uppercase? 
-            // Most Android systems use uppercase "AM/PM" with "a".
-            SimpleDateFormat("h a", Locale.getDefault()).format(date)
+        val hasMinutes = calendar.get(Calendar.MINUTE) != 0
+        
+        val pattern = when {
+            is24Hour && hasMinutes -> "H:mm"
+            is24Hour -> "H"
+            !is24Hour && hasMinutes -> "h:mm a"
+            else -> "h a"
         }
+        
+        val sdf = SimpleDateFormat(pattern, Locale.getDefault())
+        sdf.timeZone = tz
+        val formatted = sdf.format(date)
+        
+        return if (is24Hour && !hasMinutes) formatted + "h" else formatted
     }
 
-    fun formatDay(date: Date?): String {
+    fun formatDay(date: Date?, timeZone: String? = null): String {
         if (date == null) return ""
-        return SimpleDateFormat("EEE d", Locale.getDefault()).format(date)
+        val tz = if (timeZone != null) TimeZone.getTimeZone(timeZone) else TimeZone.getDefault()
+        val sdf = SimpleDateFormat("EEE d", Locale.getDefault())
+        sdf.timeZone = tz
+        return sdf.format(date)
     }
 
-    fun isToday(date: Date?): Boolean {
+    fun isToday(date: Date?, timeZone: String? = null): Boolean {
         if (date == null) return false
-        val now = Calendar.getInstance()
-        val target = Calendar.getInstance().apply { time = date }
-        return now.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
-                now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+        val tz = if (timeZone != null) TimeZone.getTimeZone(timeZone) else TimeZone.getDefault()
+        
+        val sdf = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        sdf.timeZone = tz
+        
+        val now = sdf.format(Date())
+        val target = sdf.format(date)
+        
+        val match = now == target
+        android.util.Log.d("ForecastDate", "isToday: target=$target (date=$date), now=$now, tz=${tz.id}, match=$match")
+        return match
     }
 
-    fun shouldShowDay(date: Date?): Boolean {
-        return !isToday(date)
+    fun shouldShowDay(date: Date?, timeZone: String? = null): Boolean {
+        return !isToday(date, timeZone)
     }
 }

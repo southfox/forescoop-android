@@ -142,6 +142,78 @@ class SpotForecast(
         return calendar.time
     }
 
+    fun sunriseDate(onDate: Date): Date? = daylightEventDate(sunrise, onDate)
+    fun sunsetDate(onDate: Date): Date? = daylightEventDate(sunset, onDate)
+
+    private fun daylightEventDate(time: String?, referenceDate: Date): Date? {
+        if (time == null) return null
+        val parts = time.split(":").mapNotNull { it.toIntOrNull() }
+        if (parts.size != 2) return null
+        
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT${if (gmtHourOffset >= 0) "+" else ""}$gmtHourOffset"))
+        calendar.time = referenceDate
+        calendar.set(Calendar.HOUR_OF_DAY, parts[0])
+        calendar.set(Calendar.MINUTE, parts[1])
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        return calendar.time
+    }
+
+    fun <Item> insertingDaylightEvents(
+        items: List<Item>,
+        dateProvider: (Item) -> Date,
+        makeEvent: (previous: Item, next: Item, eventDate: Date, symbolName: String) -> Item
+    ): List<Item> {
+        if (items.size < 2) return items
+        val result = mutableListOf<Item>()
+        val insertedSymbols = mutableSetOf<String>()
+        
+        var nextSunriseFound = false
+        var nextSunsetFound = false
+        val now = Date()
+
+        for (index in items.indices) {
+            val item = items[index]
+            result.add(item)
+            if (index < items.size - 1) {
+                val next = items[index + 1]
+                val start = dateProvider(item)
+                val end = dateProvider(next)
+                if (start < end) {
+                    val events = mutableListOf<Pair<Date, String>>()
+                    
+                    // Try to find next sunrise if not already found
+                    if (!nextSunriseFound) {
+                        val sunrise = sunriseDate(start)
+                        if (sunrise != null && sunrise > now && sunrise > start && sunrise < end) {
+                            events.add(sunrise to "sunrise")
+                            nextSunriseFound = true
+                        }
+                    }
+
+                    // Try to find next sunset if not already found
+                    if (!nextSunsetFound) {
+                        val sunset = sunsetDate(start)
+                        if (sunset != null && sunset > now && sunset > start && sunset < end) {
+                            events.add(sunset to "sunset")
+                            nextSunsetFound = true
+                        }
+                    }
+                    
+                    events.sortBy { it.first }
+                    for (event in events) {
+                        val key = "${event.second}:${event.first.time}"
+                        if (!insertedSymbols.contains(key)) {
+                            insertedSymbols.add(key)
+                            result.add(makeEvent(item, next, event.first, event.second))
+                        }
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     override fun toString(): String {
         return super.toString() + "\nSpotForecast: \n$currentModel\n" +
                 forecasts.joinToString("\n") { it.toString() }

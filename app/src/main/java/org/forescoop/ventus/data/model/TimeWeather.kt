@@ -27,28 +27,32 @@ class TimeWeather(
         if (hh == null) return null
         val v = info[hh] ?: return null
         
-        return try {
-            // First try direct cast
+        val result: T? = try {
             v as? T
         } catch (e: Exception) {
             null
         } ?: run {
-            // If cast fails, try manual conversion for common types
             val str = v.toString()
-            val d = str.toDoubleOrNull() ?: return null
-            
-            // Try to return as Double or Int depending on what might be expected
-            // Since we can't check T easily, we try to cast to Double or Int
-            try {
-                d as? T
-            } catch (e: Exception) {
+            val d = str.toDoubleOrNull()
+            if (d != null) {
                 try {
-                    d.toInt() as? T
-                } catch (e2: Exception) {
-                    null
+                    d as? T
+                } catch (e: Exception) {
+                    try {
+                        d.toInt() as? T
+                    } catch (e2: Exception) {
+                        str as? T
+                    }
                 }
+            } else {
+                str as? T
             }
         }
+        
+        if (result == null) {
+            android.util.Log.w("TimeWeather", "Failed to get value for hour $hh: raw=$v, type=${v.javaClass.simpleName}")
+        }
+        return result
     }
 
     override fun toString(): String {

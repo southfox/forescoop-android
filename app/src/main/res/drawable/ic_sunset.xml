@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Horizon line -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M3,19h18v2h-18z"/>
+    <!-- Semicircle Sun -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,17c-3.31,0 -6,-2.69 -6,-6h12c0,3.31 -2.69,6 -6,6z"/>
+    <!-- Rays -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M11,1h2v4h-2zM18.36,4.58l1.41,1.41 -2.83,2.83 -1.41,-1.41zM23,10h-4v2h4zM4.24,6l1.41,-1.41 2.83,2.83 -1.41,1.41zM5,10H1v2h4z"/>
+    <!-- Down Arrow -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,12l2,-2h-1.2v-3h-1.6v3h-1.2z"/>
+</vector>
