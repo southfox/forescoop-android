@@ -59,6 +59,10 @@ class PreferenceStore(private val context: Context) {
     companion object {
         const val KEY_WIND_UNIT = "wind_unit"
         const val KEY_TEMP_UNIT = "temp_unit"
+        const val KEY_PRECIP_UNIT = "precip_unit"
+        const val KEY_PRESSURE_UNIT = "pressure_unit"
+        const val KEY_FREEZING_LEVEL_UNIT = "freezing_level_unit"
+        const val KEY_WAVE_HEIGHT_UNIT = "wave_unit"
         const val KEY_FAVORITES = "favorites"
     }
 }

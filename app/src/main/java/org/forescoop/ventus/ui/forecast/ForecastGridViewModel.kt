@@ -15,13 +15,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.forescoop.ventus.data.local.PreferenceStore
-import org.forescoop.ventus.ui.common.FreezingLevelUnit
-import org.forescoop.ventus.ui.common.PrecipitationUnit
-import org.forescoop.ventus.ui.common.PressureUnit
-import org.forescoop.ventus.ui.common.TemperatureUnit
-import org.forescoop.ventus.ui.common.WaveHeightUnit
-import org.forescoop.ventus.ui.common.WindSpeedUnit
+import org.forescoop.ventus.ui.common.*
 
 class ForecastGridViewModel @JvmOverloads constructor(application: Application) : AndroidViewModel(application) {
     private val preferenceStore = PreferenceStore(application)
@@ -34,11 +30,11 @@ class ForecastGridViewModel @JvmOverloads constructor(application: Application) 
         .map { TemperatureUnit.fromWindguruPreference(it) ?: TemperatureUnit.CELSIUS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TemperatureUnit.CELSIUS)
 
-    val precipitationUnit: StateFlow<PrecipitationUnit> = preferenceStore.getString("precip_unit")
+    val precipitationUnit: StateFlow<PrecipitationUnit> = preferenceStore.getString(PreferenceStore.KEY_PRECIP_UNIT)
         .map { if (it == "in") PrecipitationUnit.INCHES else PrecipitationUnit.MILLIMETERS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PrecipitationUnit.MILLIMETERS)
 
-    val pressureUnit: StateFlow<PressureUnit> = preferenceStore.getString("pressure_unit")
+    val pressureUnit: StateFlow<PressureUnit> = preferenceStore.getString(PreferenceStore.KEY_PRESSURE_UNIT)
         .map { 
             when(it) {
                 "mbar" -> PressureUnit.MILLIBARS
@@ -49,11 +45,59 @@ class ForecastGridViewModel @JvmOverloads constructor(application: Application) 
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PressureUnit.HECTOPASCALS)
 
-    val freezingLevelUnit: StateFlow<FreezingLevelUnit> = preferenceStore.getString("freezing_level_unit")
+    val freezingLevelUnit: StateFlow<FreezingLevelUnit> = preferenceStore.getString(PreferenceStore.KEY_FREEZING_LEVEL_UNIT)
         .map { if (it == "ft") FreezingLevelUnit.FEET else FreezingLevelUnit.METERS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FreezingLevelUnit.METERS)
 
-    val waveHeightUnit: StateFlow<WaveHeightUnit> = preferenceStore.getString("wave_unit")
+    val waveHeightUnit: StateFlow<WaveHeightUnit> = preferenceStore.getString(PreferenceStore.KEY_WAVE_HEIGHT_UNIT)
         .map { if (it == "ft") WaveHeightUnit.FEET else WaveHeightUnit.METERS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WaveHeightUnit.METERS)
+
+    fun toggleWindUnit() {
+        viewModelScope.launch {
+            val next = windUnit.value.next()
+            preferenceStore.saveString(PreferenceStore.KEY_WIND_UNIT, next.name.lowercase())
+        }
+    }
+
+    fun toggleTempUnit() {
+        viewModelScope.launch {
+            val next = tempUnit.value.next()
+            preferenceStore.saveString(PreferenceStore.KEY_TEMP_UNIT, if (next == TemperatureUnit.CELSIUS) "c" else "f")
+        }
+    }
+
+    fun togglePrecipUnit() {
+        viewModelScope.launch {
+            val next = precipitationUnit.value.next()
+            preferenceStore.saveString(PreferenceStore.KEY_PRECIP_UNIT, if (next == PrecipitationUnit.INCHES) "in" else "mm")
+        }
+    }
+
+    fun togglePressureUnit() {
+        viewModelScope.launch {
+            val next = pressureUnit.value.next()
+            val prefValue = when(next) {
+                PressureUnit.MILLIBARS -> "mbar"
+                PressureUnit.INCHES_OF_MERCURY -> "inHg"
+                PressureUnit.MILLIMETERS_OF_MERCURY -> "mmHg"
+                else -> "hPa"
+            }
+            preferenceStore.saveString(PreferenceStore.KEY_PRESSURE_UNIT, prefValue)
+        }
+    }
+
+    fun toggleFreezingLevelUnit() {
+        viewModelScope.launch {
+            val next = freezingLevelUnit.value.next()
+            preferenceStore.saveString(PreferenceStore.KEY_FREEZING_LEVEL_UNIT, if (next == FreezingLevelUnit.FEET) "ft" else "m")
+        }
+    }
+
+    fun toggleWaveUnit() {
+        viewModelScope.launch {
+            val next = waveHeightUnit.value.next()
+            preferenceStore.saveString(PreferenceStore.KEY_WAVE_HEIGHT_UNIT, if (next == WaveHeightUnit.FEET) "ft" else "m")
+        }
+    }
 }

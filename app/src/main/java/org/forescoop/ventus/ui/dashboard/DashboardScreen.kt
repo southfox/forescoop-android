@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,13 +31,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.Forecast
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.*
+import java.util.Locale
 
 @Composable
 private fun rememberDashboardViewModel(): DashboardViewModel {
@@ -107,12 +107,32 @@ fun DashboardScreen(
                             tempUnit = state.tempUnit, 
                             onNavigateToSearch = onNavigateToSearch,
                             onNextHour = { viewModel.nextHour() },
-                            onPreviousHour = { viewModel.previousHour() }
+                            onPreviousHour = { viewModel.previousHour() },
+                            onToggleTempUnit = { viewModel.toggleTempUnit() },
+                            onToggleWindUnit = { viewModel.toggleWindUnit() }
+                        )
+
+                        WindDetailsSection(
+                            spotForecast = state.spotForecast, 
+                            selectedHour = state.selectedHour, 
+                            windUnit = state.windUnit, 
+                            tempUnit = state.tempUnit,
+                            onToggleWindUnit = { viewModel.toggleWindUnit() },
+                            onToggleTempUnit = { viewModel.toggleTempUnit() }
                         )
                         
-                        WindDetailsSection(state.spotForecast, state.selectedHour, state.windUnit, state.tempUnit)
-                        
-                        WeatherDetailsSection(state.spotForecast, state.selectedHour)
+                        WeatherDetailsSection(
+                            spotForecast = state.spotForecast, 
+                            selectedHour = state.selectedHour,
+                            precipUnit = state.precipitationUnit,
+                            pressureUnit = state.pressureUnit,
+                            freezingLevelUnit = state.freezingLevelUnit,
+                            waveUnit = state.waveHeightUnit,
+                            onTogglePrecipUnit = { viewModel.togglePrecipUnit() },
+                            onTogglePressureUnit = { viewModel.togglePressureUnit() },
+                            onToggleFreezingLevelUnit = { viewModel.toggleFreezingLevelUnit() },
+                            onToggleWaveUnit = { viewModel.toggleWaveUnit() }
+                        )
 
                         SummarySection(state.summary)
                     }
@@ -135,7 +155,9 @@ fun DashboardContent(
     tempUnit: TemperatureUnit,
     onNavigateToSearch: () -> Unit,
     onNextHour: () -> Unit,
-    onPreviousHour: () -> Unit
+    onPreviousHour: () -> Unit,
+    onToggleTempUnit: () -> Unit,
+    onToggleWindUnit: () -> Unit
 ) {
     val forecast = spotForecast.forecast
     val hour = selectedHour ?: spotForecast.currentForecastHour
@@ -178,22 +200,22 @@ fun DashboardContent(
             horizontalArrangement = Arrangement.Center
         ) {
             IconButton(onClick = onPreviousHour) {
-                Icon(Icons.Default.ChevronLeft, contentDescription = "Previous Hour", tint = contentColor)
+                Icon(Icons.Outlined.ChevronLeft, contentDescription = "Previous Hour", tint = contentColor)
             }
             
             Spacer(modifier = Modifier.width(16.dp))
             
             val iconName = spotForecast.weatherSymbolName(hour)
-            // Mapping simple icon names to Material Icons
+            // Mapping simple icon names to Material Symbols (Outlined)
             val icon = when (iconName) {
-                "wb_sunny" -> Icons.Default.WbSunny
-                "wb_cloudy" -> Icons.Default.Cloud
-                "nightlight" -> Icons.Default.Nightlight
-                "cloud" -> Icons.Default.Cloud
-                "ac_unit" -> Icons.Default.AcUnit
-                "umbrella" -> Icons.Default.BeachAccess
-                "water_drop" -> Icons.Default.WaterDrop
-                else -> Icons.Default.WbSunny
+                "wb_sunny" -> Icons.Outlined.WbSunny
+                "wb_cloudy" -> Icons.Outlined.Cloud
+                "nightlight" -> Icons.Outlined.Nightlight
+                "cloud" -> Icons.Outlined.Cloud
+                "ac_unit" -> Icons.Outlined.AcUnit
+                "umbrella" -> Icons.Outlined.BeachAccess
+                "water_drop" -> Icons.Outlined.WaterDrop
+                else -> Icons.Outlined.WbSunny
             }
             Icon(
                 imageVector = icon,
@@ -209,13 +231,14 @@ fun DashboardContent(
             Text(
                 text = "${displayTemp ?: "--"}${tempUnit.label}",
                 style = MaterialTheme.typography.displayMedium,
-                color = contentColor
+                color = contentColor,
+                modifier = Modifier.clickable { onToggleTempUnit() }
             )
             
             Spacer(modifier = Modifier.width(16.dp))
             
             IconButton(onClick = onNextHour) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Next Hour", tint = contentColor)
+                Icon(Icons.Outlined.ChevronRight, contentDescription = "Next Hour", tint = contentColor)
             }
         }
 
@@ -225,12 +248,13 @@ fun DashboardContent(
         val windSpeed = forecast?.windSpeed(hour)
         if (windSpeed != null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Air, contentDescription = null, tint = contentColor)
+                Icon(imageVector = Icons.Outlined.Air, contentDescription = null, tint = contentColor)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "${Knots(windSpeed).value(windUnit).toInt()} ${windUnit.label}",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = contentColor
+                    color = contentColor,
+                    modifier = Modifier.clickable { onToggleWindUnit() }
                 )
             }
             Text(
@@ -269,68 +293,120 @@ fun SummarySection(summary: String) {
 }
 
 @Composable
-fun WindDetailsSection(spotForecast: SpotForecast, selectedHour: String?, windUnit: WindSpeedUnit, tempUnit: TemperatureUnit) {
+fun WindDetailsSection(
+    spotForecast: SpotForecast, 
+    selectedHour: String?, 
+    windUnit: WindSpeedUnit, 
+    tempUnit: TemperatureUnit,
+    onToggleWindUnit: () -> Unit,
+    onToggleTempUnit: () -> Unit
+) {
     val forecast = spotForecast.forecast ?: return
     val hour = selectedHour ?: spotForecast.currentForecastHour ?: return
     
     DetailCard(title = "Wind") {
         DetailRow(
-            icon = Icons.Default.Air,
+            icon = Icons.Outlined.Air,
             label = "Wind speed",
-            value = "${Knots(forecast.windSpeed(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}"
+            value = "${Knots(forecast.windSpeed(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}",
+            onClick = onToggleWindUnit
         )
         DetailRow(
-            icon = Icons.Default.WindPower,
+            icon = Icons.Outlined.WindPower,
             label = "Wind gusts",
-            value = "${Knots(forecast.windGustsKnots(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}"
+            value = "${Knots(forecast.windGustsKnots(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}",
+            onClick = onToggleWindUnit
         )
         DetailRow(
-            icon = Icons.Default.Explore,
+            icon = Icons.Outlined.Explore,
             label = "Wind direction",
             value = forecast.windDirectionName(hour) ?: "--"
         )
         forecast.windChill(hour)?.let { chill ->
             DetailRow(
-                icon = Icons.Default.AcUnit,
+                icon = Icons.Outlined.AcUnit,
                 label = "Wind chill",
-                value = "${Temperature(chill).value(tempUnit).toInt()}${tempUnit.label}"
+                value = "${Temperature(chill).value(tempUnit).toInt()}${tempUnit.label}",
+                onClick = onToggleTempUnit
             )
         }
     }
 }
 
 @Composable
-fun WeatherDetailsSection(spotForecast: SpotForecast, selectedHour: String?) {
+fun WeatherDetailsSection(
+    spotForecast: SpotForecast, 
+    selectedHour: String?,
+    precipUnit: PrecipitationUnit,
+    pressureUnit: PressureUnit,
+    freezingLevelUnit: FreezingLevelUnit,
+    waveUnit: WaveHeightUnit,
+    onTogglePrecipUnit: () -> Unit,
+    onTogglePressureUnit: () -> Unit,
+    onToggleFreezingLevelUnit: () -> Unit,
+    onToggleWaveUnit: () -> Unit
+) {
     val forecast = spotForecast.forecast ?: return
     val hour = selectedHour ?: spotForecast.currentForecastHour ?: return
+    val hasWaveData = forecast.waveHeight(hour) != null
     
     DetailCard(title = "Weather") {
         DetailRow(
-            icon = Icons.Default.Cloud,
+            icon = Icons.Outlined.Cloud,
             label = "Cloud cover",
             value = "${forecast.cloudCoverTotal(hour) ?: 0}%"
         )
         DetailRow(
-            icon = Icons.Default.WaterDrop,
+            icon = Icons.Outlined.WaterDrop,
             label = "Humidity",
             value = "${forecast.relativeHumidity(hour) ?: 0}%"
         )
         DetailRow(
-            icon = Icons.Default.Compress,
+            icon = Icons.Outlined.Compress,
             label = "Pressure",
-            value = "${forecast.seaLevelPressure(hour)?.toInt() ?: 0} hPa"
+            value = "${AtmosphericPressure(forecast.seaLevelPressure(hour) ?: 0.0).value(pressureUnit).toInt()} ${pressureUnit.label}",
+            onClick = onTogglePressureUnit
         )
         val precip = forecast.precipitation(hour) ?: forecast.precipitation1(hour) ?: 0.0
+        val precipVal = Precipitation(precip).value(precipUnit)
+        val precipText = if (precipVal < 1 && precipVal > 0) String.format(Locale.getDefault(), "%.1f", precipVal) else precipVal.toInt().toString()
+        
         DetailRow(
-            icon = Icons.Default.BeachAccess,
+            icon = Icons.Outlined.BeachAccess,
             label = "Precipitation",
-            value = "${precip} mm"
+            value = "$precipText ${precipUnit.label}",
+            onClick = onTogglePrecipUnit
         )
         DetailRow(
-            icon = Icons.Default.Landscape,
+            icon = Icons.Outlined.Landscape,
             label = "Freezing level",
-            value = "${forecast.freezingLevelHeightInMeters(hour)?.toInt() ?: 0} m"
+            value = "${FreezingLevel(forecast.freezingLevelHeightInMeters(hour) ?: 0.0).value(freezingLevelUnit).toInt()} ${freezingLevelUnit.label}",
+            onClick = onToggleFreezingLevelUnit
         )
+        
+        if (hasWaveData) {
+            val h = forecast.waveHeight(hour) ?: 0.0
+            DetailRow(
+                icon = Icons.Outlined.Water,
+                label = "Wave height",
+                value = "${String.format(Locale.getDefault(), "%.1f", WaveHeight(h).value(waveUnit))} ${waveUnit.label}",
+                onClick = onToggleWaveUnit
+            )
+            DetailRow(
+                icon = Icons.Outlined.Timer,
+                label = "Wave period",
+                value = "${forecast.wavePeriod(hour)?.let { String.format(Locale.getDefault(), "%.0f", it) } ?: "--"} s"
+            )
+            DetailRow(
+                icon = Icons.Outlined.Explore,
+                label = "Wave direction",
+                value = forecast.waveDirection(hour)?.let { 
+                    val travel = (it + 180.0) % 360.0
+                    val arrows = listOf("↑", "↗", "→", "↘", "↓", "↙", "←", "↖")
+                    arrows[( ((travel + 22.5) / 45.0).toInt() % 8 )]
+                } ?: "--"
+            )
+        }
     }
 }
 
@@ -357,10 +433,11 @@ fun DetailCard(title: String, content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String) {
+fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, onClick: (() -> Unit)? = null) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -370,12 +447,17 @@ fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Stri
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = label, style = MaterialTheme.typography.bodyMedium)
         }
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = value, 
+            style = MaterialTheme.typography.bodyMedium, 
+            fontWeight = FontWeight.Bold,
+            color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

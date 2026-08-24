@@ -49,7 +49,7 @@ class TimeWeather(
             }
         }
         
-        if (result == null) {
+        if (result == null && v != null) {
             android.util.Log.w("TimeWeather", "Failed to get value for hour $hh: raw=$v, type=${v.javaClass.simpleName}")
         }
         return result

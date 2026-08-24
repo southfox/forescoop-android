@@ -14,6 +14,11 @@ enum class WindSpeedUnit(val label: String) {
     MILES_PER_HOUR("mph"),
     BEAUFORT("Bft");
 
+    fun next(): WindSpeedUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
+
     companion object {
         fun fromWindguruPreference(pref: String?): WindSpeedUnit? {
             return when (pref?.trim()?.lowercase()) {
@@ -32,6 +37,11 @@ enum class TemperatureUnit(val label: String) {
     CELSIUS("°C"),
     FAHRENHEIT("°F");
 
+    fun next(): TemperatureUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
+
     companion object {
         fun fromWindguruPreference(pref: String?): TemperatureUnit? {
             return when (pref?.trim()?.lowercase()) {
@@ -45,24 +55,44 @@ enum class TemperatureUnit(val label: String) {
 
 enum class WaveHeightUnit(val label: String) {
     METERS("m"),
-    FEET("ft")
+    FEET("ft");
+
+    fun next(): WaveHeightUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
 }
 
 enum class PressureUnit(val label: String) {
     HECTOPASCALS("hPa"),
     MILLIBARS("mbar"),
     INCHES_OF_MERCURY("inHg"),
-    MILLIMETERS_OF_MERCURY("mmHg")
+    MILLIMETERS_OF_MERCURY("mmHg");
+
+    fun next(): PressureUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
 }
 
 enum class PrecipitationUnit(val label: String) {
     MILLIMETERS("mm"),
-    INCHES("in")
+    INCHES("in");
+
+    fun next(): PrecipitationUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
 }
 
 enum class FreezingLevelUnit(val label: String) {
     METERS("m"),
-    FEET("ft")
+    FEET("ft");
+
+    fun next(): FreezingLevelUnit {
+        val all = entries
+        return all[(ordinal + 1) % all.size]
+    }
 }
 
 class Knots(val value: Double) {

@@ -14,18 +14,18 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.remember
-import androidx.compose.ui.res.painterResource
 import org.forescoop.ventus.R
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.ui.forecast.GridHour
@@ -81,7 +81,7 @@ fun ForecastHourSelector(
             }
             val isSelected = when(gridHour) {
                 is GridHour.Forecast -> gridHour.hour == selectedHour
-                is GridHour.SunEvent -> false // Sun events themselves are not "selected" in the state usually
+                is GridHour.SunEvent -> false 
             }
             val date = when(gridHour) {
                 is GridHour.Forecast -> forecast.forecastDate(gridHour.hour)
@@ -124,14 +124,14 @@ fun ForecastHourSelector(
                     )
                 } else {
                     val icon = when (iconName) {
-                        "wb_sunny" -> Icons.Default.WbSunny
-                        "wb_cloudy" -> Icons.Default.Cloud
-                        "nightlight" -> Icons.Default.Nightlight
-                        "cloud" -> Icons.Default.Cloud
-                        "ac_unit" -> Icons.Default.AcUnit
-                        "umbrella" -> Icons.Default.BeachAccess
-                        "water_drop" -> Icons.Default.WaterDrop
-                        else -> Icons.Default.WbSunny
+                        "wb_sunny" -> Icons.Outlined.WbSunny
+                        "wb_cloudy" -> Icons.Outlined.Cloud
+                        "nightlight" -> Icons.Outlined.Nightlight
+                        "cloud" -> Icons.Outlined.Cloud
+                        "ac_unit" -> Icons.Outlined.AcUnit
+                        "umbrella" -> Icons.Outlined.BeachAccess
+                        "water_drop" -> Icons.Outlined.WaterDrop
+                        else -> Icons.Outlined.WbSunny
                     }
                     Icon(
                         imageVector = icon,

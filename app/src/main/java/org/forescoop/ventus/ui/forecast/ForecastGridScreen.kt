@@ -16,7 +16,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -131,25 +132,25 @@ fun ForecastGridScreen(
                 // Row Labels (Fixed)
                 Column(
                     modifier = Modifier
-                        .width(150.dp) // Increased width
+                        .width(150.dp) // Adjusted width for icons + text
                         .verticalScroll(rememberScrollState())
                 ) {
                     GridLabel("Hour", isHeader = true)
-                    GridLabel("Wind speed", icon = Icons.Default.Air, unit = windUnit.label)
-                    GridLabel("Wind gusts", icon = Icons.Default.WindPower, unit = windUnit.label)
-                    GridLabel("Wind direction", icon = Icons.Default.Explore)
-                    GridLabel("Temperature", icon = Icons.Default.DeviceThermostat, unit = tempUnit.label)
-                    GridLabel("Real temperature", icon = Icons.Default.DeviceThermostat, unit = tempUnit.label)
-                    GridLabel("Wind chill", icon = Icons.Default.AcUnit, unit = tempUnit.label)
-                    GridLabel("Freezing level", icon = Icons.Default.Landscape, unit = freezingLevelUnit.label)
-                    GridLabel("Cloud cover", icon = Icons.Default.Cloud, unit = "%")
-                    GridLabel("Precipitation", icon = Icons.Default.BeachAccess, unit = precipUnit.label)
-                    GridLabel("Pressure", icon = Icons.Default.Compress, unit = pressureUnit.label)
-                    GridLabel("Humidity", icon = Icons.Default.WaterDrop, unit = "%")
+                    GridLabel("Wind speed", icon = Icons.Outlined.Air, unit = windUnit.label, onClick = { viewModel.toggleWindUnit() })
+                    GridLabel("Wind gusts", icon = Icons.Outlined.WindPower, unit = windUnit.label, onClick = { viewModel.toggleWindUnit() })
+                    GridLabel("Wind direction", icon = Icons.Outlined.Explore)
+                    GridLabel("Temperature", icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel("Real temperature", icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel("Wind chill", icon = Icons.Outlined.AcUnit, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel("Freezing level", icon = Icons.Outlined.Landscape, unit = freezingLevelUnit.label, onClick = { viewModel.toggleFreezingLevelUnit() })
+                    GridLabel("Cloud cover", icon = Icons.Outlined.Cloud, unit = "%")
+                    GridLabel("Precipitation", icon = Icons.Outlined.BeachAccess, unit = precipUnit.label, onClick = { viewModel.togglePrecipUnit() })
+                    GridLabel("Pressure", icon = Icons.Outlined.Compress, unit = pressureUnit.label, onClick = { viewModel.togglePressureUnit() })
+                    GridLabel("Humidity", icon = Icons.Outlined.WaterDrop, unit = "%")
                     if (hasWaveData) {
-                        GridLabel("Wave height", icon = Icons.Default.Water, unit = waveUnit.label)
-                        GridLabel("Wave period", icon = Icons.Default.Timer, unit = "s")
-                        GridLabel("Wave direction", icon = Icons.Default.Explore)
+                        GridLabel("Wave height", icon = Icons.Outlined.Water, unit = waveUnit.label, onClick = { viewModel.toggleWaveUnit() })
+                        GridLabel("Wave period", icon = Icons.Outlined.Timer, unit = "s")
+                        GridLabel("Wave direction", icon = Icons.Outlined.Explore)
                     }
                 }
 
@@ -168,13 +169,14 @@ fun ForecastGridScreen(
 }
 
 @Composable
-fun GridLabel(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, unit: String? = null, isHeader: Boolean = false) {
+fun GridLabel(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, unit: String? = null, isHeader: Boolean = false, onClick: (() -> Unit)? = null) {
     Box(
         modifier = Modifier
             .height(if (isHeader) 85.dp else 30.dp)
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-            .padding(horizontal = 4.dp), // Reduced horizontal padding
+            .clickable(enabled = onClick != null) { onClick?.invoke() }
+            .padding(horizontal = 4.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -182,16 +184,16 @@ fun GridLabel(text: String, icon: androidx.compose.ui.graphics.vector.ImageVecto
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(12.dp), // Smaller icon
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    modifier = Modifier.size(14.dp),
+                    tint = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(6.dp))
             }
             Column {
                 Text(
                     text = text, 
                     style = MaterialTheme.typography.bodySmall, 
-                    fontSize = 9.sp, // Smaller font
+                    fontSize = 10.sp, 
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
@@ -199,8 +201,8 @@ fun GridLabel(text: String, icon: androidx.compose.ui.graphics.vector.ImageVecto
                     Text(
                         text = "($unit)", 
                         style = MaterialTheme.typography.labelSmall, 
-                        fontSize = 7.sp, // Smaller font
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontSize = 8.sp, 
+                        color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         maxLines = 1
                     )
                 }
@@ -366,7 +368,7 @@ fun ForecastColumn(
             }
         }
         DataCell(
-            text = rawPrecip?.let { Precipitation(it).value(precipUnit).let { v -> if (v < 1) String.format(Locale.getDefault(), "%.1f", v) else v.toInt().toString() } } ?: "--",
+            text = rawPrecip?.let { Precipitation(it).value(precipUnit).let { v -> if (v < 1 && v > 0) String.format(Locale.getDefault(), "%.1f", v) else v.toInt().toString() } } ?: "--",
             backgroundColor = rawPrecip?.let { WeatherColorScale.precipitationColor(it) } ?: Color.Transparent,
             textColor = if (rawPrecip != null && rawPrecip > 0 && (rawTempReal ?: 0.0) <= 0) Color.Blue else Color.Unspecified
         )
@@ -474,14 +476,14 @@ fun GridHeaderCell(day: String?, hour: String, symbol: String? = null) {
                     )
                 } else {
                     val icon = when (symbol) {
-                        "wb_sunny" -> Icons.Default.WbSunny
-                        "wb_cloudy" -> Icons.Default.Cloud
-                        "nightlight" -> Icons.Default.Nightlight
-                        "cloud" -> Icons.Default.Cloud
-                        "ac_unit" -> Icons.Default.AcUnit
-                        "umbrella" -> Icons.Default.BeachAccess
-                        "water_drop" -> Icons.Default.WaterDrop
-                        else -> Icons.Default.WbSunny
+                        "wb_sunny" -> Icons.Outlined.WbSunny
+                        "wb_cloudy" -> Icons.Outlined.Cloud
+                        "nightlight" -> Icons.Outlined.Nightlight
+                        "cloud" -> Icons.Outlined.Cloud
+                        "ac_unit" -> Icons.Outlined.AcUnit
+                        "umbrella" -> Icons.Outlined.BeachAccess
+                        "water_drop" -> Icons.Outlined.WaterDrop
+                        else -> Icons.Outlined.WbSunny
                     }
                     Icon(
                         imageVector = icon,
