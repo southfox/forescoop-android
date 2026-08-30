@@ -26,6 +26,7 @@ import org.forescoop.ventus.ui.common.*
 import org.forescoop.ventus.analytics.AnalyticsEvent
 import org.forescoop.ventus.analytics.AnalyticsLogging
 import org.forescoop.ventus.analytics.log
+import org.forescoop.ventus.util.LocationTracker
 
 sealed class DashboardUiState {
     object Loading : DashboardUiState()
@@ -48,7 +49,8 @@ sealed class DashboardUiState {
 class DashboardViewModel(
     application: Application,
     private val analytics: AnalyticsLogging,
-    private val repository: WindguruRepository
+    private val repository: WindguruRepository,
+    private val locationTracker: LocationTracker
 ) : AndroidViewModel(application) {
 
     private val accountManager = (application as VentusApplication).accountManager
@@ -185,6 +187,48 @@ class DashboardViewModel(
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error"
                 analytics.log(AnalyticsEvent.ForecastLoadFailed(spotId, e.message ?: e.toString()))
+                analytics.recordException(e)
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun loadForecastForCurrentLocation() {
+        viewModelScope.launch {
+            _loading.value = true
+            _error.value = null
+            _selectedHour.value = null
+            try {
+                val location = locationTracker.getCurrentLocation()
+                if (location == null) {
+                    _error.value = "Could not retrieve current location"
+                    _loading.value = false
+                    return@launch
+                }
+
+                val username = accountManager.getUsername()
+                val password = accountManager.getPassword()()
+
+                if (username.isNullOrEmpty() || password == null) {
+                    _error.value = "Current location forecasts are only available for PRO users. Please log in."
+                    _loading.value = false
+                    return@launch
+                }
+
+                val forecast = repository.getWForecastLatLon(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    username = username,
+                    password = password
+                )
+
+                _spotForecast.value = forecast
+                // We don't save "last_spot_id" for current location as it's dynamic
+                analytics.log(AnalyticsEvent.ForecastLoadSucceeded("current_location"))
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Unknown error"
+                analytics.log(AnalyticsEvent.ForecastLoadFailed("current_location", e.message ?: e.toString()))
                 analytics.recordException(e)
             } finally {
                 _loading.value = false

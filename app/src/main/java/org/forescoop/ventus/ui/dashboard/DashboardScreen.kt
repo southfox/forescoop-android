@@ -29,24 +29,40 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.input.pointer.pointerInput
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import org.forescoop.ventus.R
 import org.forescoop.ventus.VentusApplication
-import org.forescoop.ventus.data.model.Forecast
-import org.forescoop.ventus.data.model.SpotForecast
+import org.forescoop.ventus.data.model.*
+import org.forescoop.ventus.data.model.precipitationAgreement
 import org.forescoop.ventus.domain.repository.WindguruRepository
 import org.forescoop.ventus.ui.common.*
+import org.forescoop.ventus.util.LocationTracker
+import java.util.Date
 import java.util.Locale
 
 @Composable
 private fun rememberDashboardViewModel(): DashboardViewModel {
     val application = LocalContext.current.applicationContext as VentusApplication
     return viewModel(factory = LambdaViewModelFactory {
-        DashboardViewModel(application, application.analytics, WindguruRepository(application.windguruService))
+        DashboardViewModel(
+            application, 
+            application.analytics, 
+            WindguruRepository(application.windguruService),
+            LocationTracker(application)
+        )
     })
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = rememberDashboardViewModel(),
@@ -59,6 +75,9 @@ fun DashboardScreen(
     onNavigateToProfile: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+    )
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -71,7 +90,14 @@ fun DashboardScreen(
                 }
             }
             is DashboardUiState.Success -> {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .forecastAccessibilityContainer(
+                        label = ForecastAccessibility.summary(LocalContext.current, state.spotForecast, state.selectedHour),
+                        hint = "",
+                        identifier = "dashboard_root"
+                    )
+                ) {
                     AnimatedWeatherBackground(forecast = state.spotForecast, hour = state.selectedHour)
                     
                     Column(
@@ -90,6 +116,13 @@ fun DashboardScreen(
                             onNavigateToProfile = onNavigateToProfile,
                             onLogout = { viewModel.logout() },
                             onToggleFavorite = { viewModel.toggleFavorite() },
+                            onCurrentLocationClick = {
+                                if (locationPermissionState.status.isGranted) {
+                                    viewModel.loadForecastForCurrentLocation()
+                                } else {
+                                    locationPermissionState.launchPermissionRequest()
+                                }
+                            },
                             isFavorite = state.isFavorite,
                             isAuthenticated = state.isAuthenticated
                         )
@@ -99,6 +132,8 @@ fun DashboardScreen(
                             selectedHour = state.selectedHour,
                             onHourSelected = { viewModel.selectHour(it) }
                         )
+                        
+                        ForecastDaylightSummary(forecast = state.spotForecast)
                         
                         DashboardContent(
                             spotForecast = state.spotForecast, 
@@ -200,7 +235,7 @@ fun DashboardContent(
             horizontalArrangement = Arrangement.Center
         ) {
             IconButton(onClick = onPreviousHour) {
-                Icon(Icons.Outlined.ChevronLeft, contentDescription = "Previous Hour", tint = contentColor)
+                Icon(Icons.Outlined.ChevronLeft, contentDescription = stringResource(R.string.previous_hour), tint = contentColor)
             }
             
             Spacer(modifier = Modifier.width(16.dp))
@@ -228,17 +263,38 @@ fun DashboardContent(
             val rawTemp = forecast?.temperatureReal(hour) ?: forecast?.temperature(hour)
             val displayTemp = rawTemp?.let { Temperature(it).value(tempUnit).toInt() }
             
-            Text(
-                text = "${displayTemp ?: "--"}${tempUnit.label}",
-                style = MaterialTheme.typography.displayMedium,
-                color = contentColor,
-                modifier = Modifier.clickable { onToggleTempUnit() }
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${displayTemp ?: "--"}${tempUnit.label}",
+                    style = MaterialTheme.typography.displayMedium,
+                    color = contentColor,
+                    modifier = Modifier.clickable { onToggleTempUnit() }
+                )
+                
+                spotForecast.forecasts.precipitationAgreement(hour)?.let { agreement ->
+                    if (agreement.percentage > 0) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${agreement.percentage}%",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Cyan
+                            )
+                            Icon(
+                                imageVector = Icons.Outlined.WaterDrop,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = Color.Cyan
+                            )
+                        }
+                    }
+                }
+            }
             
             Spacer(modifier = Modifier.width(16.dp))
             
             IconButton(onClick = onNextHour) {
-                Icon(Icons.Outlined.ChevronRight, contentDescription = "Next Hour", tint = contentColor)
+                Icon(Icons.Outlined.ChevronRight, contentDescription = stringResource(R.string.next_hour), tint = contentColor)
             }
         }
 
@@ -263,6 +319,36 @@ fun DashboardContent(
                 color = contentColor
             )
         }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Moon phase and illumination
+        ForecastMoonCalendar.info(spotForecast, spotForecast.forecastDate(hour) ?: Date())?.let { moon ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val phaseIcon = when(moon.symbolName) {
+                    "moonphase.new.moon" -> R.drawable.ic_moon_new
+                    "moonphase.waxing.crescent" -> R.drawable.ic_moon_waxing_crescent
+                    "moonphase.first.quarter" -> R.drawable.ic_moon_first_quarter
+                    "moonphase.waxing.gibbous" -> R.drawable.ic_moon_waxing_gibbous
+                    "moonphase.full.moon" -> R.drawable.ic_moon_full
+                    "moonphase.waning.gibbous" -> R.drawable.ic_moon_waning_gibbous
+                    "moonphase.last.quarter" -> R.drawable.ic_moon_last_quarter
+                    "moonphase.waning.crescent" -> R.drawable.ic_moon_waning_crescent
+                    else -> R.drawable.ic_moon_new
+                }
+                Icon(
+                    painter = painterResource(id = phaseIcon),
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = contentColor.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "${stringResource(moon.phaseNameResId)} · ${moon.illuminationText}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = contentColor.copy(alpha = 0.8f)
+                )
+            }
+        }
     }
 }
 
@@ -278,7 +364,7 @@ fun SummarySection(summary: String) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Forecast Insight",
+                text = stringResource(R.string.forecast_insight),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -304,28 +390,28 @@ fun WindDetailsSection(
     val forecast = spotForecast.forecast ?: return
     val hour = selectedHour ?: spotForecast.currentForecastHour ?: return
     
-    DetailCard(title = "Wind") {
+    DetailCard(title = stringResource(R.string.wind_section)) {
         DetailRow(
             icon = Icons.Outlined.Air,
-            label = "Wind speed",
+            label = stringResource(R.string.wind_speed),
             value = "${Knots(forecast.windSpeed(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}",
             onClick = onToggleWindUnit
         )
         DetailRow(
             icon = Icons.Outlined.WindPower,
-            label = "Wind gusts",
+            label = stringResource(R.string.wind_gusts),
             value = "${Knots(forecast.windGustsKnots(hour) ?: 0.0).value(windUnit).toInt()} ${windUnit.label}",
             onClick = onToggleWindUnit
         )
         DetailRow(
             icon = Icons.Outlined.Explore,
-            label = "Wind direction",
+            label = stringResource(R.string.wind_direction),
             value = forecast.windDirectionName(hour) ?: "--"
         )
         forecast.windChill(hour)?.let { chill ->
             DetailRow(
                 icon = Icons.Outlined.AcUnit,
-                label = "Wind chill",
+                label = stringResource(R.string.wind_chill),
                 value = "${Temperature(chill).value(tempUnit).toInt()}${tempUnit.label}",
                 onClick = onToggleTempUnit
             )
@@ -350,20 +436,20 @@ fun WeatherDetailsSection(
     val hour = selectedHour ?: spotForecast.currentForecastHour ?: return
     val hasWaveData = forecast.waveHeight(hour) != null
     
-    DetailCard(title = "Weather") {
+    DetailCard(title = stringResource(R.string.weather_section)) {
         DetailRow(
             icon = Icons.Outlined.Cloud,
-            label = "Cloud cover",
+            label = stringResource(R.string.cloud_cover),
             value = "${forecast.cloudCoverTotal(hour) ?: 0}%"
         )
         DetailRow(
             icon = Icons.Outlined.WaterDrop,
-            label = "Humidity",
+            label = stringResource(R.string.humidity),
             value = "${forecast.relativeHumidity(hour) ?: 0}%"
         )
         DetailRow(
             icon = Icons.Outlined.Compress,
-            label = "Pressure",
+            label = stringResource(R.string.pressure),
             value = "${AtmosphericPressure(forecast.seaLevelPressure(hour) ?: 0.0).value(pressureUnit).toInt()} ${pressureUnit.label}",
             onClick = onTogglePressureUnit
         )
@@ -373,33 +459,33 @@ fun WeatherDetailsSection(
         
         DetailRow(
             icon = Icons.Outlined.BeachAccess,
-            label = "Precipitation",
+            label = stringResource(R.string.precipitation),
             value = "$precipText ${precipUnit.label}",
             onClick = onTogglePrecipUnit
         )
         DetailRow(
             icon = Icons.Outlined.Landscape,
-            label = "Freezing level",
+            label = stringResource(R.string.freezing_level),
             value = "${FreezingLevel(forecast.freezingLevelHeightInMeters(hour) ?: 0.0).value(freezingLevelUnit).toInt()} ${freezingLevelUnit.label}",
             onClick = onToggleFreezingLevelUnit
         )
         
         if (hasWaveData) {
-            val h = forecast.waveHeight(hour) ?: 0.0
+            val waveH = forecast.waveHeight(hour) ?: 0.0
             DetailRow(
                 icon = Icons.Outlined.Water,
-                label = "Wave height",
-                value = "${String.format(Locale.getDefault(), "%.1f", WaveHeight(h).value(waveUnit))} ${waveUnit.label}",
+                label = stringResource(R.string.wave_height),
+                value = "${String.format(Locale.getDefault(), "%.1f", WaveHeight(waveH).value(waveUnit))} ${waveUnit.label}",
                 onClick = onToggleWaveUnit
             )
             DetailRow(
                 icon = Icons.Outlined.Timer,
-                label = "Wave period",
+                label = stringResource(R.string.wave_period),
                 value = "${forecast.wavePeriod(hour)?.let { String.format(Locale.getDefault(), "%.0f", it) } ?: "--"} s"
             )
             DetailRow(
                 icon = Icons.Outlined.Explore,
-                label = "Wave direction",
+                label = stringResource(R.string.wave_direction),
                 value = forecast.waveDirection(hour)?.let { 
                     val travel = (it + 180.0) % 360.0
                     val arrows = listOf("↑", "↗", "→", "↘", "↓", "↙", "←", "↖")
@@ -438,7 +524,10 @@ fun DetailRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Stri
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = onClick != null) { onClick?.invoke() }
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$label: $value"
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

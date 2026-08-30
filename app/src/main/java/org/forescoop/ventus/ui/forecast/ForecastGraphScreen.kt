@@ -27,12 +27,18 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import org.forescoop.ventus.R
 import org.forescoop.ventus.data.model.ForecastGraphPoint
+import org.forescoop.ventus.data.model.ForecastMoonCalendar
 import org.forescoop.ventus.data.model.SpotForecast
 import org.forescoop.ventus.ui.common.Knots
 import org.forescoop.ventus.ui.common.Temperature
@@ -42,7 +48,7 @@ import java.util.*
 
 import org.forescoop.ventus.ui.common.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ForecastGraphScreen(
     spotForecast: SpotForecast,
@@ -55,14 +61,24 @@ fun ForecastGraphScreen(
     onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onCurrentLocationClick: () -> Unit,
     isFavorite: Boolean,
     isAuthenticated: Boolean,
     onNavigateBack: () -> Unit
 ) {
     val points = remember(spotForecast) { createPoints(spotForecast) }
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+    )
     
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .forecastAccessibilityContainer(
+                label = ForecastAccessibility.summary(LocalContext.current, spotForecast, null),
+                hint = "",
+                identifier = "forecast_graph_root"
+            ),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -77,6 +93,13 @@ fun ForecastGraphScreen(
                 onNavigateToProfile = onNavigateToProfile,
                 onLogout = onLogout,
                 onToggleFavorite = onToggleFavorite,
+                onCurrentLocationClick = {
+                    if (locationPermissionState.status.isGranted) {
+                        onCurrentLocationClick()
+                    } else {
+                        locationPermissionState.launchPermissionRequest()
+                    }
+                },
                 isFavorite = isFavorite,
                 isAuthenticated = isAuthenticated
             )
@@ -187,8 +210,45 @@ private fun DrawScope.drawForecastGraph(points: List<ForecastGraphPoint>, textMe
 
     // Grid lines and date labels
     points.forEachIndexed { index, point ->
-        if (index % 2 == 0) {
-            val x = xFunc(index)
+        val x = xFunc(index)
+        
+        if (point.id.startsWith("sun:") || point.id.startsWith("moon:")) {
+            val isMoon = point.id.startsWith("moon:")
+            val color = if (isMoon) Color(0xFF3F51B5) else Color(0xFFFFEB3B)
+            
+            drawLine(
+                color = color.copy(alpha = 0.6f),
+                start = Offset(x, topPadding),
+                end = Offset(x, weatherTop + weatherHeight),
+                strokeWidth = 2.dp.toPx()
+            )
+            
+            // Draw small icon at the top
+            val iconId = when {
+                point.id.contains("sunrise") -> R.drawable.ic_sunrise
+                point.id.contains("sunset") -> R.drawable.ic_sunset
+                point.id.contains("moonrise") -> R.drawable.ic_moonrise
+                point.id.contains("moonset") -> R.drawable.ic_moonset
+                else -> null
+            }
+            
+            iconId?.let {
+                // Simplified icon drawing for now or use text icon
+                val symbol = when {
+                    point.id.contains("sunrise") -> "☼"
+                    point.id.contains("sunset") -> "☾"
+                    point.id.contains("moonrise") -> "m↑"
+                    point.id.contains("moonset") -> "m↓"
+                    else -> ""
+                }
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = symbol,
+                    topLeft = Offset(x - 6.dp.toPx(), topPadding - 15.dp.toPx()),
+                    style = TextStyle(fontSize = 12.sp, color = color, fontWeight = FontWeight.Bold)
+                )
+            }
+        } else if (index % 2 == 0) {
             drawLine(
                 color = Color.LightGray.copy(alpha = 0.3f),
                 start = Offset(x, topPadding),
@@ -326,8 +386,7 @@ private fun DrawScope.drawForecastGraph(points: List<ForecastGraphPoint>, textMe
 
 private fun createPoints(source: SpotForecast): List<ForecastGraphPoint> {
     val weather = source.forecast ?: return emptyList()
-    return source.availableForecastHours.mapNotNull { hour ->
-        val offset = hour.toIntOrNull() ?: return@mapNotNull null
+    val basePoints = source.availableForecastHours.mapNotNull { hour ->
         val date = source.forecastDate(hour) ?: return@mapNotNull null
         
         val windKts = weather.windSpeed(hour) ?: 0.0
@@ -336,7 +395,7 @@ private fun createPoints(source: SpotForecast): List<ForecastGraphPoint> {
         ForecastGraphPoint(
             id = hour,
             date = date,
-            wind = windKts, // Simplified: using knots directly for now
+            wind = windKts,
             gust = gustKts,
             direction = weather.windDirection(hour),
             cloudCover = weather.cloudCoverTotal(hour)?.toDouble() ?: 0.0,
@@ -346,4 +405,49 @@ private fun createPoints(source: SpotForecast): List<ForecastGraphPoint> {
             precipitation = (weather.precipitation1(hour) ?: weather.precipitation(hour)) ?: 0.0
         )
     }
+    
+    if (basePoints.size < 2) return basePoints
+    
+    val daylightPoints = source.insertingDaylightEvents<ForecastGraphPoint>(
+        items = basePoints,
+        dateProvider = { it.date },
+        makeEvent = { prev, next, eventDate, symbolName ->
+            ForecastGraphPoint(
+                id = "sun:$symbolName:${prev.id}:${next.id}",
+                date = eventDate,
+                wind = (prev.wind + next.wind) / 2,
+                gust = (prev.gust + next.gust) / 2,
+                direction = if (prev.direction != null && next.direction != null) (prev.direction + next.direction) / 2 else prev.direction ?: next.direction,
+                cloudCover = (prev.cloudCover + next.cloudCover) / 2,
+                humidity = (prev.humidity + next.humidity) / 2,
+                pressure = (prev.pressure + next.pressure) / 2,
+                temperature = (prev.temperature + next.temperature) / 2,
+                precipitation = (prev.precipitation + next.precipitation) / 2
+            )
+        }
+    )
+    
+    if (daylightPoints.isEmpty()) return daylightPoints
+    
+    val firstDate = daylightPoints.first().date
+    val lastDate = daylightPoints.last().date
+    val moonEvents = ForecastMoonCalendar.events(source, firstDate, lastDate)
+    
+    val moonPoints = moonEvents.mapNotNull { event ->
+        val nearest = daylightPoints.minByOrNull { Math.abs(it.date.time - event.first.time) } ?: return@mapNotNull null
+        ForecastGraphPoint(
+            id = "moon:${event.second}:${nearest.id}",
+            date = event.first,
+            wind = nearest.wind,
+            gust = nearest.gust,
+            direction = nearest.direction,
+            cloudCover = nearest.cloudCover,
+            humidity = nearest.humidity,
+            pressure = nearest.pressure,
+            temperature = nearest.temperature,
+            precipitation = nearest.precipitation
+        )
+    }
+    
+    return (daylightPoints + moonPoints).sortedBy { it.date }
 }

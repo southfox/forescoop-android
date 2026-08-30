@@ -9,6 +9,8 @@
 package org.forescoop.ventus.data.local
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -28,6 +30,34 @@ class PreferenceStore(private val context: Context) {
 
     suspend fun saveString(key: String, value: String) {
         val prefKey = stringPreferencesKey(key)
+        context.dataStore.edit { preferences ->
+            preferences[prefKey] = value
+        }
+    }
+
+    fun getInt(key: String, defaultValue: Int): Flow<Int> {
+        val prefKey = intPreferencesKey(key)
+        return context.dataStore.data.map { preferences ->
+            preferences[prefKey] ?: defaultValue
+        }
+    }
+
+    suspend fun saveInt(key: String, value: Int) {
+        val prefKey = intPreferencesKey(key)
+        context.dataStore.edit { preferences ->
+            preferences[prefKey] = value
+        }
+    }
+
+    fun getBoolean(key: String, defaultValue: Boolean): Flow<Boolean> {
+        val prefKey = booleanPreferencesKey(key)
+        return context.dataStore.data.map { preferences ->
+            preferences[prefKey] ?: defaultValue
+        }
+    }
+
+    suspend fun saveBoolean(key: String, value: Boolean) {
+        val prefKey = booleanPreferencesKey(key)
         context.dataStore.edit { preferences ->
             preferences[prefKey] = value
         }
@@ -64,5 +94,13 @@ class PreferenceStore(private val context: Context) {
         const val KEY_FREEZING_LEVEL_UNIT = "freezing_level_unit"
         const val KEY_WAVE_HEIGHT_UNIT = "wave_unit"
         const val KEY_FAVORITES = "favorites"
+        
+        const val KEY_GRID_HOUR_STEP = "grid_hour_step"
+        const val KEY_WEATHER_BACKGROUND_TYPE = "weather_background_type"
+        const val KEY_APPEARANCE_MODE = "appearance_mode"
+        const val KEY_THEME_TYPE = "theme_type"
+        const val KEY_LANGUAGE_CODE = "language_code"
+        const val KEY_SEVERE_WEATHER_ALERTS = "severe_weather_alerts"
+        const val KEY_EXPAND_LABELS = "expand_labels"
     }
 }

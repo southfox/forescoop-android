@@ -9,6 +9,7 @@
 package org.forescoop.ventus.ui.common
 
 import android.content.Context
+import org.forescoop.ventus.R
 import org.forescoop.ventus.data.model.SpotForecast
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,7 +33,7 @@ object ForecastIntelligence {
         prefs: ForecastUnitPreferences = ForecastUnitPreferences(),
         locale: Locale = Locale.getDefault()
     ): String {
-        return Snapshot(forecast, hour, prefs, locale).deterministicSummary()
+        return Snapshot(context, forecast, hour, prefs, locale).deterministicSummary()
     }
 
     fun detailedSummary(
@@ -42,10 +43,11 @@ object ForecastIntelligence {
         prefs: ForecastUnitPreferences = ForecastUnitPreferences(),
         locale: Locale = Locale.getDefault()
     ): String {
-        return Snapshot(forecast, hour, prefs, locale).structuredOverview()
+        return Snapshot(context, forecast, hour, prefs, locale).structuredOverview()
     }
 
     private class Snapshot(
+        val context: Context,
         val forecast: SpotForecast,
         val hour: String?,
         val prefs: ForecastUnitPreferences,
@@ -54,7 +56,7 @@ object ForecastIntelligence {
         val selectedHour = hour ?: forecast.currentForecastHour ?: "0"
         val source = forecast.forecast
         val locationName = forecast.displayName
-        val hourLabel = getHourLabel(selectedHour, forecast, locale)
+        val hourLabel = getHourLabel(context, selectedHour, forecast, locale)
         
         val tempCelsius = source?.temperatureReal(selectedHour) ?: source?.temperature(selectedHour) ?: 0.0
         val isRealTemp = source?.temperatureReal(selectedHour) != null
@@ -76,24 +78,25 @@ object ForecastIntelligence {
             val tempStr = formatTemperature(tempCelsius, prefs.temperatureUnit, locale)
             val windStr = formatWind(windKnots, prefs.windSpeedUnit, locale)
             
-            val phrases = mutableListOf("$tempStr with $windStr wind")
+            val phrases = mutableListOf(context.getString(R.string.summary_temp_with_wind, tempStr, windStr))
             
-            phrases.add(if (isRealTemp) "real, altitude-corrected reading" else "model reading, no altitude correction available")
+            phrases.add(if (isRealTemp) context.getString(R.string.summary_real_temp) else context.getString(R.string.summary_model_temp))
             
             gustKnots?.let {
                 if (hasSignificantGust) {
-                    phrases.add("gusting to ${formatWind(it, prefs.windSpeedUnit, locale)}")
+                    phrases.add(context.getString(R.string.summary_gusting, formatWind(it, prefs.windSpeedUnit, locale)))
                 }
             }
             
-            cloudCover?.let { phrases.add("$it% cloud cover") }
-            humidity?.let { phrases.add("$it% humidity") }
+            cloudCover?.let { phrases.add(context.getString(R.string.summary_cloud_cover, it)) }
+            humidity?.let { phrases.add(context.getString(R.string.summary_humidity, it)) }
             if (hasRain) {
-                phrases.add("${formatPrecipitation(rainMm, prefs.precipitationUnit, locale)} of rain")
+                val kind = if (forecast.weatherSymbolNames(selectedHour).any { it.contains("snow") }) context.getString(R.string.snow) else context.getString(R.string.rain)
+                phrases.add(context.getString(R.string.summary_rain, formatPrecipitation(rainMm, prefs.precipitationUnit, locale), kind))
             }
-            freezingLevelM?.let { phrases.add("freezing level at ${formatFreezingLevel(it, prefs.freezingLevelUnit, locale)}") }
-            pressureHpa?.let { phrases.add("pressure ${formatPressure(it, prefs.pressureUnit, locale)}") }
-            waveHeightM?.let { phrases.add("${formatWaveHeight(it, prefs.waveHeightUnit, locale)} waves") }
+            freezingLevelM?.let { phrases.add(context.getString(R.string.summary_freezing_level, formatFreezingLevel(it, prefs.freezingLevelUnit, locale))) }
+            pressureHpa?.let { phrases.add(context.getString(R.string.summary_pressure, formatPressure(it, prefs.pressureUnit, locale))) }
+            waveHeightM?.let { phrases.add(context.getString(R.string.summary_waves, formatWaveHeight(it, prefs.waveHeightUnit, locale))) }
             
             // Porting outlooks
             val currentOffset = selectedHour.toIntOrNull() ?: 0
@@ -105,33 +108,36 @@ object ForecastIntelligence {
             val nextDay = futureHours.filter { it.second <= currentOffset + 24 }
             val nextTwoDays = futureHours.filter { it.second <= currentOffset + 48 }
 
-            getWindOutlook(nextDay, forecast, prefs.windSpeedUnit, locale)?.let { phrases.add(it) }
-            getTemperatureOutlook(nextTwoDays, forecast, prefs.temperatureUnit, locale)?.let { phrases.add(it) }
-            getPrecipitationOutlook(nextDay, forecast, prefs.precipitationUnit, locale)?.let { phrases.add(it) }
-            getWaveOutlook(nextTwoDays, forecast, prefs.waveHeightUnit, locale)?.let { phrases.add(it) }
+            getWindOutlook(context, nextDay, forecast, prefs.windSpeedUnit, locale)?.let { phrases.add(it) }
+            getTemperatureOutlook(context, nextTwoDays, forecast, prefs.temperatureUnit, locale)?.let { phrases.add(it) }
+            getPrecipitationOutlook(context, nextDay, forecast, prefs.precipitationUnit, locale)?.let { phrases.add(it) }
+            getWaveOutlook(context, nextTwoDays, forecast, prefs.waveHeightUnit, locale)?.let { phrases.add(it) }
 
             val body = phrases.joinToString(", ") + "."
             return "$locationName · $hourLabel: $body"
         }
 
         fun structuredOverview(): String {
-            val phrases = mutableListOf(
-                formatTemperature(tempCelsius, prefs.temperatureUnit, locale) + " with " + formatWind(windKnots, prefs.windSpeedUnit, locale) + " wind"
-            )
+            val phrases = mutableListOf<String>()
+            val tempStr = formatTemperature(tempCelsius, prefs.temperatureUnit, locale)
+            val windStr = formatWind(windKnots, prefs.windSpeedUnit, locale)
+            phrases.add(context.getString(R.string.summary_temp_with_wind, tempStr, windStr))
+
             if (hasSignificantGust) {
-                gustKnots?.let { phrases.add("gusting to ${formatWind(it, prefs.windSpeedUnit, locale)}") }
+                gustKnots?.let { phrases.add(context.getString(R.string.summary_gusting, formatWind(it, prefs.windSpeedUnit, locale))) }
             }
             if (hasRain) {
-                phrases.add("${formatPrecipitation(rainMm, prefs.precipitationUnit, locale)} of rain")
+                val kind = if (forecast.weatherSymbolNames(selectedHour).any { it.contains("snow") }) context.getString(R.string.snow) else context.getString(R.string.rain)
+                phrases.add(context.getString(R.string.summary_rain, formatPrecipitation(rainMm, prefs.precipitationUnit, locale), kind))
             }
-            cloudCover?.let { phrases.add("$it% cloud cover") }
-            humidity?.let { phrases.add("$it% humidity") }
-            freezingLevelM?.let { phrases.add("freezing level at ${formatFreezingLevel(it, prefs.freezingLevelUnit, locale)}") }
-            pressureHpa?.let { phrases.add("pressure ${formatPressure(it, prefs.pressureUnit, locale)}") }
-            waveHeightM?.let { phrases.add("${formatWaveHeight(it, prefs.waveHeightUnit, locale)} waves") }
+            cloudCover?.let { phrases.add(context.getString(R.string.summary_cloud_cover, it)) }
+            humidity?.let { phrases.add(context.getString(R.string.summary_humidity, it)) }
+            freezingLevelM?.let { phrases.add(context.getString(R.string.summary_freezing_level, formatFreezingLevel(it, prefs.freezingLevelUnit, locale))) }
+            pressureHpa?.let { phrases.add(context.getString(R.string.summary_pressure, formatPressure(it, prefs.pressureUnit, locale))) }
+            waveHeightM?.let { phrases.add(context.getString(R.string.summary_waves, formatWaveHeight(it, prefs.waveHeightUnit, locale))) }
             
             val openingBody = phrases.joinToString(", ")
-            val opening = "For $hourLabel, expect $openingBody."
+            val opening = context.getString(R.string.summary_expect, hourLabel, openingBody)
 
             val currentOffset = selectedHour.toIntOrNull() ?: 0
             val futureHours = forecast.availableForecastHours
@@ -139,12 +145,12 @@ object ForecastIntelligence {
                 .filter { it.second >= currentOffset }
                 .sortedBy { it.second }
             
-            val days = getDayDetails(futureHours, forecast, locale)
+            val days = getDayDetails(context, futureHours, forecast, locale)
             if (days.isEmpty()) return opening
 
-            val windOutlook = getWindOutlook(futureHours.filter { it.second <= currentOffset + 24 }, forecast, prefs.windSpeedUnit, locale)
-            val waveOutlook = getWaveOutlook(futureHours.filter { it.second <= currentOffset + 48 }, forecast, prefs.waveHeightUnit, locale)
-            val precipitationOutlook = getPrecipitationOutlook(futureHours.filter { it.second <= currentOffset + 24 }, forecast, prefs.precipitationUnit, locale)
+            val windOutlook = getWindOutlook(context, futureHours.filter { it.second <= currentOffset + 24 }, forecast, prefs.windSpeedUnit, locale)
+            val waveOutlook = getWaveOutlook(context, futureHours.filter { it.second <= currentOffset + 48 }, forecast, prefs.waveHeightUnit, locale)
+            val precipitationOutlook = getPrecipitationOutlook(context, futureHours.filter { it.second <= currentOffset + 24 }, forecast, prefs.precipitationUnit, locale)
 
             val precipitationDays = days.filter { it.precipitationMm > 0 }
             val hasUnsettledPattern = precipitationDays.size >= maxOf(3, days.size / 2)
@@ -163,50 +169,50 @@ object ForecastIntelligence {
 
             windOutlook?.let {
                 val capitalized = it.replaceFirstChar { char -> char.uppercase() }
-                val chillNote = "Winds at that strength can make it feel noticeably colder than the air temperature alone suggests."
-                points.add("Wind & Chill" to "$capitalized. $chillNote")
+                val chillNote = context.getString(R.string.chill_note)
+                points.add(context.getString(R.string.wind_and_chill_title) to "$capitalized. $chillNote")
             }
 
             waveOutlook?.let {
                 val capitalized = it.replaceFirstChar { char -> char.uppercase() }
-                points.add("Sea & Swell" to "$capitalized.")
+                points.add(context.getString(R.string.sea_and_swell_title) to "$capitalized.")
             }
 
             iceRiskDay?.let {
-                val body = "Wet surfaces from rain, combined with a low of ${formatTemperature(it.lowCelsius, prefs.temperatureUnit, locale)} around ${it.label}, can refreeze into ice on exposed paths and roads overnight."
-                points.add("Ice Hazard" to body)
+                val body = context.getString(R.string.ice_risk_body, formatTemperature(it.lowCelsius, prefs.temperatureUnit, locale), it.label)
+                points.add(context.getString(R.string.ice_hazard_title) to body)
             }
 
             if (hasUnsettledPattern) {
-                val kind = if (precipitationDays.any { it.isSnow }) "rain or snow" else "rain"
-                val body = "${precipitationDays.size} of the next ${days.size} days bring $kind, so expect a wet, changeable stretch rather than a single passing system."
-                points.add("Unsettled Outlook" to body)
+                val kind = if (precipitationDays.any { it.isSnow }) context.getString(R.string.rain_or_snow) else context.getString(R.string.rain)
+                val body = context.getString(R.string.unsettled_body, precipitationDays.size, days.size, kind)
+                points.add(context.getString(R.string.unsettled_outlook_title) to body)
             } else if (precipitationOutlook != null) {
                 val capitalized = precipitationOutlook.replaceFirstChar { char -> char.uppercase() }
-                points.add("Precipitation" to "$capitalized.")
+                points.add(context.getString(R.string.precipitation) to "$capitalized.")
             }
 
             coldestDay?.let {
                 if (it.lowCelsius <= -5) {
-                    val body = "Overnight lows drop to around ${formatTemperature(it.lowCelsius, prefs.temperatureUnit, locale)} on ${it.label} — dress for a sharp chill after dark."
-                    points.add("Cold Snap" to body)
+                    val body = context.getString(R.string.cold_snap_body, formatTemperature(it.lowCelsius, prefs.temperatureUnit, locale), it.label)
+                    points.add(context.getString(R.string.cold_snap_title) to body)
                 }
             }
 
             hottestDay?.let {
                 if (it.highCelsius >= 32) {
-                    val body = "Highs climb to around ${formatTemperature(it.highCelsius, prefs.temperatureUnit, locale)} on ${it.label}, well above the rest of the outlook."
-                    points.add("Heat" to body)
+                    val body = context.getString(R.string.heat_body, formatTemperature(it.highCelsius, prefs.temperatureUnit, locale), it.label)
+                    points.add(context.getString(R.string.heat_title) to body)
                 }
             }
 
             if (points.isEmpty()) {
-                val outlook = getDailyOutlook(days, prefs.temperatureUnit, locale)
-                return if (outlook != null) "$opening\n\nNo notable hazards ahead — a generally quiet stretch: $outlook." else opening
+                val outlook = getDailyOutlook(context, days, prefs.temperatureUnit, locale)
+                return if (outlook != null) context.getString(R.string.summary_no_hazards, outlook) else opening
             }
 
             val sections = points.joinToString("\n\n") { "**${it.first}:** ${it.second}" }
-            return "$opening\n\n**Key Trends & Impact**\n\n$sections"
+            return "$opening\n\n**" + context.getString(R.string.key_trends_title) + "**\n\n$sections"
         }
 
         private data class DayDetail(
@@ -220,6 +226,7 @@ object ForecastIntelligence {
         )
 
         private fun getDayDetails(
+            context: Context,
             hours: List<Pair<String, Int>>,
             forecast: SpotForecast,
             locale: Locale
@@ -264,12 +271,12 @@ object ForecastIntelligence {
                 }
                 
                 val representativeHour = dayHours[dayHours.size / 2].first
-                val condition = getConditionWord(forecast, representativeHour, locale)
+                val condition = getConditionWord(context, forecast, representativeHour, locale)
                 
                 val dayCal = Calendar.getInstance().apply { time = dayDate }
                 val label = if (now.get(Calendar.YEAR) == dayCal.get(Calendar.YEAR) &&
                     now.get(Calendar.DAY_OF_YEAR) == dayCal.get(Calendar.DAY_OF_YEAR)) {
-                    "today"
+                    context.getString(R.string.today)
                 } else {
                     SimpleDateFormat("EEE d", locale).format(dayDate)
                 }
@@ -278,26 +285,27 @@ object ForecastIntelligence {
             }
         }
 
-        private fun getDailyOutlook(days: List<DayDetail>, temperatureUnit: TemperatureUnit, locale: Locale): String? {
+        private fun getDailyOutlook(context: Context, days: List<DayDetail>, temperatureUnit: TemperatureUnit, locale: Locale): String? {
             if (days.size <= 1) return null
             return days.joinToString(", ") { day ->
                 "${day.label} ${formatTemperature(day.lowCelsius, temperatureUnit, locale)}–${formatTemperature(day.highCelsius, temperatureUnit, locale)} ${day.condition}"
             }
         }
 
-        private fun getConditionWord(forecast: SpotForecast, hour: String, locale: Locale): String {
+        private fun getConditionWord(context: Context, forecast: SpotForecast, hour: String, locale: Locale): String {
             val symbols = forecast.weatherSymbolNames(hour)
             return when {
-                symbols.any { it.contains("snow") } -> "snow"
-                symbols.any { it.contains("rain") || it.contains("drop") || it.contains("umbrella") } -> "rain"
-                symbols.any { it.contains("fog") } -> "fog"
-                symbols.contains("cloud") -> "overcast"
-                symbols.any { it.contains("cloudy") } -> "partly cloudy"
-                else -> "clear"
+                symbols.any { it.contains("snow") } -> context.getString(R.string.snow)
+                symbols.any { it.contains("rain") || it.contains("drop") || it.contains("umbrella") } -> context.getString(R.string.rain)
+                symbols.any { it.contains("fog") } -> context.getString(R.string.fog)
+                symbols.contains("cloud") -> context.getString(R.string.overcast)
+                symbols.any { it.contains("cloudy") } -> context.getString(R.string.partly_cloudy)
+                else -> context.getString(R.string.clear)
             }
         }
 
         private fun getWindOutlook(
+            context: Context,
             hours: List<Pair<String, Int>>,
             forecast: SpotForecast,
             unit: WindSpeedUnit,
@@ -321,13 +329,14 @@ object ForecastIntelligence {
             }
             
             if (peakBft >= 6 && peakHour != null) {
-                val label = getHourLabel(peakHour, forecast, locale)
-                return "strong wind expected, up to ${formatWind(peakKnots, unit, locale)} (Beaufort $peakBft) around $label"
+                val label = getHourLabel(context, peakHour, forecast, locale)
+                return context.getString(R.string.summary_strong_wind, formatWind(peakKnots, unit, locale), peakBft, label)
             }
             return null
         }
 
         private fun getTemperatureOutlook(
+            context: Context,
             hours: List<Pair<String, Int>>,
             forecast: SpotForecast,
             unit: TemperatureUnit,
@@ -345,20 +354,21 @@ object ForecastIntelligence {
             
             coldest?.let {
                 if (it.first <= -5) {
-                    val label = getHourLabel(it.second, forecast, locale)
-                    return "very cold, dropping to ${formatTemperature(it.first, unit, locale)} around $label"
+                    val label = getHourLabel(context, it.second, forecast, locale)
+                    return context.getString(R.string.summary_very_cold, formatTemperature(it.first, unit, locale), label)
                 }
             }
             hottest?.let {
                 if (it.first >= 32) {
-                    val label = getHourLabel(it.second, forecast, locale)
-                    return "very hot, reaching ${formatTemperature(it.first, unit, locale)} around $label"
+                    val label = getHourLabel(context, it.second, forecast, locale)
+                    return context.getString(R.string.summary_very_hot, formatTemperature(it.first, unit, locale), label)
                 }
             }
             return null
         }
 
         private fun getPrecipitationOutlook(
+            context: Context,
             hours: List<Pair<String, Int>>,
             forecast: SpotForecast,
             unit: PrecipitationUnit,
@@ -381,17 +391,18 @@ object ForecastIntelligence {
             
             if (total > 0) {
                 val amountText = formatPrecipitation(total, unit, locale)
-                val kind = if (isSnow) "snow" else "rain"
+                val kind = if (isSnow) context.getString(R.string.snow) else context.getString(R.string.rain)
                 onsetHour?.let {
-                    val label = getHourLabel(it, forecast, locale)
-                    return "$amountText of $kind expected, starting around $label"
+                    val label = getHourLabel(context, it, forecast, locale)
+                    return context.getString(R.string.summary_precip_expected, amountText, kind, label)
                 }
-                return "$amountText of $kind expected"
+                return context.getString(R.string.summary_precip_expected_simple, amountText, kind)
             }
             return null
         }
 
         private fun getWaveOutlook(
+            context: Context,
             hours: List<Pair<String, Int>>,
             forecast: SpotForecast,
             unit: WaveHeightUnit,
@@ -410,13 +421,13 @@ object ForecastIntelligence {
             }
             
             if (peakMeters >= 2.5 && peakHour != null) {
-                val label = getHourLabel(peakHour, forecast, locale)
-                return "large swell expected, up to ${formatWaveHeight(peakMeters, unit, locale)} around $label"
+                val label = getHourLabel(context, peakHour, forecast, locale)
+                return context.getString(R.string.summary_large_swell, formatWaveHeight(peakMeters, unit, locale), label)
             }
             return null
         }
 
-        private fun getHourLabel(hour: String, forecast: SpotForecast, locale: Locale): String {
+        private fun getHourLabel(context: Context, hour: String, forecast: SpotForecast, locale: Locale): String {
             val date = forecast.forecastDate(hour) ?: return String.format("%02d:00", (hour.toIntOrNull() ?: 0) % 24)
             val now = Calendar.getInstance()
             val forecastCal = Calendar.getInstance().apply { time = date }
@@ -424,7 +435,7 @@ object ForecastIntelligence {
             val isToday = now.get(Calendar.YEAR) == forecastCal.get(Calendar.YEAR) &&
                     now.get(Calendar.DAY_OF_YEAR) == forecastCal.get(Calendar.DAY_OF_YEAR)
             
-            val dayPart = if (isToday) "today" else SimpleDateFormat("EEE d", locale).format(date)
+            val dayPart = if (isToday) context.getString(R.string.today) else SimpleDateFormat("EEE d", locale).format(date)
             val timePart = SimpleDateFormat("HH:mm", locale).format(date)
             
             return "$dayPart, $timePart"

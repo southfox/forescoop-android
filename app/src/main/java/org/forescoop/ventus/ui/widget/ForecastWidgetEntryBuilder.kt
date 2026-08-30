@@ -52,6 +52,45 @@ object ForecastWidgetEntryBuilder {
         val press = weather?.seaLevelPressure(hour) ?: 1013.0
         val pressure = String.format(locale, "%.0f hPa", press)
 
+        val range = forecast.dailyTemperatureRange(hour)
+        val high = range?.let { String.format(locale, "%.0f°", Temperature(it.second).value(prefs.temperatureUnit)) } ?: "--"
+        val low = range?.let { String.format(locale, "%.0f°", Temperature(it.first).value(prefs.temperatureUnit)) } ?: "--"
+
+        // Hourly
+        val currentOffset = hour.toIntOrNull() ?: 0
+        val hourly = forecast.availableForecastHours
+            .mapNotNull { it.toIntOrNull()?.let { offset -> it to offset } }
+            .filter { it.second > currentOffset }
+            .take(6)
+            .map { (h, _) ->
+                val t = weather?.temperatureReal(h) ?: weather?.temperature(h) ?: 0.0
+                ForecastWidgetHour(
+                    label = String.format(locale, "%02d:00", h.toInt() % 24),
+                    symbolName = forecast.weatherSymbolName(h),
+                    temperature = String.format(locale, "%.0f°", Temperature(t).value(prefs.temperatureUnit))
+                )
+            }
+
+        // Daily (simulated from available hours since Windguru response is hourly)
+        // We'll take same hour in next days
+        val daily = mutableListOf<ForecastWidgetDay>()
+        val baseHour = currentOffset % 24
+        for (day in 1..4) {
+            val targetHour = (day * 24 + baseHour).toString()
+            if (forecast.availableForecastHours.contains(targetHour)) {
+                val t = weather?.temperatureReal(targetHour) ?: weather?.temperature(targetHour) ?: 0.0
+                val date = forecast.forecastDate(targetHour) ?: java.util.Date()
+                daily.add(ForecastWidgetDay(
+                    label = SimpleDateFormat("EEE", locale).format(date),
+                    symbolName = forecast.weatherSymbolName(targetHour),
+                    low = "--", // Simplified for now
+                    high = String.format(locale, "%.0f°", Temperature(t).value(prefs.temperatureUnit)),
+                    lowValue = 0.0,
+                    highValue = t
+                ))
+            }
+        }
+
         return ForecastWidgetEntry(
             locationName = forecast.displayName,
             temperature = temperature,
@@ -65,10 +104,12 @@ object ForecastWidgetEntryBuilder {
             cloudCover = cloudCover,
             pressure = pressure,
             symbolName = forecast.weatherSymbolName(hour),
-            condition = "", // Not used for now
-            high = "--",
-            low = "--",
-            insight = ForecastIntelligence.summary(context, forecast, hour, prefs, locale)
+            condition = forecast.weatherSymbolName(hour), // Or a mapping to a string description
+            high = high,
+            low = low,
+            insight = ForecastIntelligence.summary(context, forecast, hour, prefs, locale),
+            hourly = hourly,
+            daily = daily
         )
     }
 }

@@ -53,6 +53,9 @@ class ForecastGridViewModel @JvmOverloads constructor(application: Application) 
         .map { if (it == "ft") WaveHeightUnit.FEET else WaveHeightUnit.METERS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WaveHeightUnit.METERS)
 
+    val isLabelsExpanded: StateFlow<Boolean> = preferenceStore.getBoolean(PreferenceStore.KEY_EXPAND_LABELS, true)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     fun toggleWindUnit() {
         viewModelScope.launch {
             val next = windUnit.value.next()
@@ -98,6 +101,12 @@ class ForecastGridViewModel @JvmOverloads constructor(application: Application) 
         viewModelScope.launch {
             val next = waveHeightUnit.value.next()
             preferenceStore.saveString(PreferenceStore.KEY_WAVE_HEIGHT_UNIT, if (next == WaveHeightUnit.FEET) "ft" else "m")
+        }
+    }
+
+    fun toggleLabelsExpanded() {
+        viewModelScope.launch {
+            preferenceStore.saveBoolean(PreferenceStore.KEY_EXPAND_LABELS, !isLabelsExpanded.value)
         }
     }
 }

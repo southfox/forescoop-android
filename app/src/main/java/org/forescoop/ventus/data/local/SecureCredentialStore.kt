@@ -2,28 +2,14 @@
 //  SecureCredentialStore.kt
 //  Ventus
 //
-//  Created by Javier Fuchs on 2026-08-20.
-//  Copyright © 2026 Mobile Patagonia. All rights reserved.
-//
 
 package org.forescoop.ventus.data.local
 
 import android.content.Context
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKey
+import android.content.SharedPreferences
 
 class SecureCredentialStore(context: Context) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-
-    private val sharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "secure_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("secure_prefs_fallback", Context.MODE_PRIVATE)
 
     fun savePassword(username: String, password: String) {
         sharedPreferences.edit().putString(username, password).apply()

@@ -1,0 +1,141 @@
+<resources>
+    <string name="settings_title">Einstellungen</string>
+    <string name="done">Fertig</string>
+    <string name="forecast_hours">Vorhersagestunden</string>
+    <string name="every_x_hours">Alle %1$d Stunden</string>
+    <string name="forecast_hours_footer">Wie weit Vorhersagespalten und Stundenausähler in der App und auf anderen Geräten voneinander entfernt sind.</string>
+    <string name="animations">Animationen</string>
+    <string name="weather_background">Wetterhintergrund</string>
+    <string name="appearance">Erscheinungsbild</string>
+    <string name="appearance_footer">Das System folgt der Hell- oder Dunkel-Einstellung dieses Geräts.</string>
+    <string name="theme">Design</string>
+    <string name="theme_footer">Designs ändern Farben und Schriftart, ohne die Textgröße zu ändern. Die Systemvorgabe folgt dem aktuellen Erscheinungsbild des Geräts.</string>
+    <string name="language">Sprache</string>
+    <string name="language_footer">Das System folgt der Sprache des Geräts. Die Auswahl einer Sprache überschreibt diese nur für Ventus.</string>
+    <string name="notifications">Benachrichtigungen</string>
+    <string name="severe_weather_alerts">Unwetterwarnungen</string>
+    <string name="forecast_alerts">Vorhersagewarnungen</string>
+    <string name="notifications_footer">Lassen Sie sich über starken Schneefall, extreme Kälte oder extreme Hitze in der Nähe Ihres ausgewählten Standorts benachrichtigen oder richten Sie Ihre eigenen Push-Benachrichtigungen für bestimmte Orte, Modelle und Bedingungen ein.</string>
+    <string name="units">Einheiten</string>
+    <string name="wind_speed">Windgeschwindigkeit</string>
+    <string name="wind_gusts">Windböen</string>
+    <string name="wind_direction">Windrichtung</string>
+    <string name="temperature">Temperatur</string>
+    <string name="real_temperature">Gefühlte Temperatur</string>
+    <string name="wind_chill">Windchill</string>
+    <string name="freezing_level">Nullgradgrenze</string>
+    <string name="cloud_cover">Bewölkung</string>
+    <string name="precipitation">Niederschlag</string>
+    <string name="pressure">Luftdruck</string>
+    <string name="humidity">Luftfeuchtigkeit</string>
+    <string name="wave_height">Wellenhöhe</string>
+    <string name="wave_period">Wellenperiode</string>
+    <string name="wave_direction">Wellenrichtung</string>
+    <string name="hour">Stunde</string>
+
+    <string name="wind_section">Wind</string>
+    <string name="weather_section">Wetter</string>
+    <string name="forecast_insight">Vorhersage-Einblick</string>
+
+    <string name="moon_new">Neumond</string>
+    <string name="moon_waxing_crescent">Zunehmender Sichelmond</string>
+    <string name="moon_first_quarter">Erstes Viertel</string>
+    <string name="moon_waxing_gibbous">Zunehmender Dreiviertelmond</string>
+    <string name="moon_full">Vollmond</string>
+    <string name="moon_waning_gibbous">Abnehmender Dreiviertelmond</string>
+    <string name="moon_last_quarter">Letztes Viertel</string>
+    <string name="moon_waning_crescent">Abnehmender Sichelmond</string>
+
+    <string name="summary_real_temp">echte, höhenkorrigierte Messung</string>
+    <string name="summary_model_temp">Modellmessung, keine Höhenkorrektur verfügbar</string>
+    <string name="summary_gusting">Böen bis zu %1$s</string>
+    <string name="summary_cloud_cover">%1$d%% Bewölkung</string>
+    <string name="summary_humidity">%1$d%% Luftfeuchtigkeit</string>
+    <string name="summary_rain">%1$s %2$s</string>
+    <string name="summary_freezing_level">Nullgradgrenze bei %1$s</string>
+    <string name="summary_pressure">Luftdruck %1$s</string>
+    <string name="summary_waves">%1$s Wellen</string>
+    <string name="summary_temp_with_wind">%1$s mit %2$s Wind</string>
+    <string name="summary_expect">Für %1$s erwarten wir %2$s.</string>
+    <string name="summary_strong_wind">Starker Wind erwartet, bis zu %1$s (Beaufort %2$d) gegen %3$s</string>
+    <string name="summary_very_cold">sehr kalt, sinkt auf %1$s gegen %2$s</string>
+    <string name="summary_very_hot">sehr heiß, erreicht %1$s gegen %2$s</string>
+    <string name="summary_precip_expected">%1$s %2$s erwartet, Beginn gegen %3$s</string>
+    <string name="summary_precip_expected_simple">%1$s %2$s erwartet</string>
+    <string name="summary_large_swell">hohe Dünung erwartet, bis zu %1$s gegen %2$s</string>
+    <string name="summary_no_hazards">Keine nennenswerten Gefahren voraus — eine allgemein ruhige Zeit: %1$s.</string>
+
+    <string name="wind_and_chill_title">Wind &amp; Chill</string>
+    <string name="sea_and_swell_title">See &amp; Dünung</string>
+    <string name="ice_hazard_title">Eisgefahr</string>
+    <string name="unsettled_outlook_title">Unbeständige Aussichten</string>
+    <string name="cold_snap_title">Kälteeinbruch</string>
+    <string name="heat_title">Hitze</string>
+    <string name="key_trends_title">Wichtige Trends &amp; Auswirkungen</string>
+
+    <string name="chill_note">Winde dieser Stärke können dazu führen, dass es sich spürbar kälter anfühlt, als es die Lufttemperatur allein vermuten lässt.</string>
+    <string name="ice_risk_body">Vom Regen nasse Oberflächen können in Kombination mit einem Tiefstwert von %1$s gegen %2$s über Nacht auf exponierten Wegen und Straßen zu Eis gefrieren.</string>
+    <string name="unsettled_body">%1$d der nächsten %2$d Tage bringen %3$s, erwarten Sie also eine nasse, wechselhafte Zeit statt eines einzelnen vorbeiziehenden Systems.</string>
+    <string name="cold_snap_body">Die nächtlichen Tiefstwerte sinken auf etwa %1$s am %2$s — ziehen Sie sich für eine starke Abkühlung nach Einbruch der Dunkelheit warm an.</string>
+    <string name="heat_body">Die Höchstwerte steigen auf etwa %1$s am %2$s, weit über den Rest der Aussichten.</string>
+
+    <string name="today">heute</string>
+    <string name="rain">Regen</string>
+    <string name="snow">Schnee</string>
+    <string name="rain_or_snow">Regen oder Schnee</string>
+    <string name="overcast">bedeckt</string>
+    <string name="partly_cloudy">teils bewölkt</string>
+    <string name="clear">klar</string>
+    <string name="fog">Nebel</string>
+
+    <string name="profile_title">Windguru Profil</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="retry">Wiederholen</string>
+    <string name="account">Konto</string>
+    <string name="membership">Mitgliedschaft</string>
+    <string name="pro_member">Windguru PRO</string>
+    <string name="public_member">Öffentlich</string>
+    <string name="ad_free_account">Werbefreies Konto</string>
+    <string name="forecast_preferences">Vorhersage-Einstellungen</string>
+    <string name="visible_hours">Sichtbare Stunden</string>
+    <string name="wind_ratings">Windbewertungen</string>
+
+    <string name="system">System</string>
+    <string name="light">Hell</string>
+    <string name="dark">Dunkel</string>
+
+    <string name="none">Keine</string>
+    <string name="native_anim">Nativ</string>
+    <string name="liquid_glass">Flüssigglas</string>
+    <string name="ocean">Ozean</string>
+    <string name="forest">Wald</string>
+    <string name="sunset">Sonnenuntergang</string>
+    <string name="arctic">Arktis</string>
+    <string name="lavender">Lavendel</string>
+    <string name="desert">Wüste</string>
+
+    <string name="menu_dashboard">Vorhersage-Dashboard</string>
+    <string name="menu_grid">Vorhersage-Gitter</string>
+    <string name="menu_graph">Vorhersage-Grafik</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="menu_help">Hilfe</string>
+    <string name="menu_about">Über</string>
+    <string name="menu_profile">Profil</string>
+    <string name="menu_logout">Abmelden</string>
+    <string name="menu_login">Anmelden</string>
+
+    <string name="search_placeholder">Orte suchen…</string>
+    <string name="favorites_header">Favoriten</string>
+    <string name="spots_header">Orte</string>
+    <string name="no_spots_found">Keine Orte gefunden</string>
+    <string name="enter_city_or_spot">Geben Sie eine Stadt oder einen Ort ein</string>
+    <string name="favorite">Favorit</string>
+    <string name="menu">Menü</string>
+    <string name="previous_hour">Vorherige Stunde</string>
+    <string name="next_hour">Nächste Stunde</string>
+
+    <string name="accessibility_temp_label">Temperatur %1$d Grad Celsius</string>
+    <string name="accessibility_wind_label">Wind %1$d Knoten</string>
+    <string name="accessibility_rain_label">Regen %1$.1f Millimeter</string>
+    <string name="accessibility_detail_row_template">%1$s: %2$s</string>
+</resources>

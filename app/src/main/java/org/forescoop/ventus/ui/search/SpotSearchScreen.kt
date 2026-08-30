@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -21,18 +22,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.PlatformImeOptions
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.R
 import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.SpotOwner
 import org.forescoop.ventus.domain.repository.WindguruRepository
@@ -42,7 +37,11 @@ import org.forescoop.ventus.ui.common.LambdaViewModelFactory
 private fun rememberSpotSearchViewModel(): SpotSearchViewModel {
     val application = LocalContext.current.applicationContext as VentusApplication
     return viewModel(factory = LambdaViewModelFactory {
-        SpotSearchViewModel(application, application.analytics, WindguruRepository(application.windguruService))
+        SpotSearchViewModel(
+            application,
+            application.analytics,
+            WindguruRepository(application.windguruService)
+        )
     })
 }
 
@@ -53,93 +52,92 @@ fun SpotSearchScreen(
     onSpotSelected: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsState()
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     TextField(
-                        value = query,
-                        onValueChange = { newValue ->
-                            // Allow only alphanumeric, spaces, and basic punctuation, no emoticons
-                            if (newValue.all { it.isLetterOrDigit() || it.isWhitespace() || it == '-' || it == ',' }) {
-                                query = newValue
-                            }
+                        value = searchQuery,
+                        onValueChange = { 
+                            searchQuery = it
+                            viewModel.search(it)
                         },
-                        placeholder = { Text("Search spots...") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester),
+                        placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                        modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Search,
-                            keyboardType = KeyboardType.Uri,
-                            autoCorrectEnabled = false,
-                            platformImeOptions = PlatformImeOptions("allowEmoji=false")
-                        ),
-                        keyboardActions = KeyboardActions(onSearch = { viewModel.search(query) }),
-                        trailingIcon = {
-                            IconButton(onClick = { viewModel.search(query) }) {
-                                Icon(Icons.Default.Search, contentDescription = "Search")
-                            }
-                        },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
-                        )
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        ),
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = ""; viewModel.search("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear")
+                                }
+                            }
+                        }
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cancel))
                     }
                 }
             )
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
             when (val state = uiState) {
                 is SearchUiState.Idle -> {
-                    Text("Enter a city or spot", modifier = Modifier.align(Alignment.Center))
+                    item {
+                        EmptyState(stringResource(R.string.enter_city_or_spot))
+                    }
                 }
                 is SearchUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
                 }
                 is SearchUiState.Success -> {
-                    LazyColumn {
-                        if (state.favorites.isNotEmpty()) {
-                            item {
-                                Text("Favorites", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp))
-                            }
-                            items(state.favorites) { spot ->
-                                SpotItem(spot = spot, isFavorite = true, onClick = { spot.idSpot?.let { onSpotSelected(it) } })
-                            }
+                    if (state.favorites.isNotEmpty()) {
+                        item {
+                            SectionHeader(stringResource(R.string.favorites_header))
                         }
-                        if (state.spots.isNotEmpty()) {
-                            item {
-                                Text("Spots", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp))
-                            }
-                            items(state.spots) { spot ->
-                                SpotItem(spot = spot, isFavorite = false, onClick = { spot.idSpot?.let { onSpotSelected(it) } })
-                            }
-                        } else if (state.favorites.isEmpty()) {
-                            item {
-                                Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text("No spots found")
-                                }
-                            }
+                        items(state.favorites) { spot ->
+                            SpotRow(spot, isFavorite = true, onClick = { onSpotSelected(spot.idSpot.toString()) })
+                        }
+                    }
+                    
+                    if (state.spots.isNotEmpty()) {
+                        item {
+                            SectionHeader(stringResource(R.string.spots_header))
+                        }
+                        items(state.spots) { spot ->
+                            SpotRow(spot, isFavorite = false, onClick = { onSpotSelected(spot.idSpot.toString()) })
+                        }
+                    } else if (searchQuery.isNotEmpty()) {
+                        item {
+                            EmptyState(stringResource(R.string.no_spots_found))
                         }
                     }
                 }
                 is SearchUiState.Error -> {
-                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error, modifier = Modifier.align(Alignment.Center))
+                    item {
+                        EmptyState("Error: ${state.message}")
+                    }
                 }
             }
         }
@@ -147,18 +145,46 @@ fun SpotSearchScreen(
 }
 
 @Composable
-fun SpotItem(spot: SpotOwner, isFavorite: Boolean, onClick: () -> Unit) {
+fun SectionHeader(title: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun SpotRow(spot: SpotOwner, isFavorite: Boolean, onClick: () -> Unit) {
     ListItem(
-        headlineContent = { Text(spot.displayName) },
-        supportingContent = {
-            val details = listOfNotNull(spot.spot, spot.countryName).joinToString(" · ")
-            Text(details)
-        },
+        headlineContent = { Text(spot.spotName ?: "Unknown") },
+        supportingContent = { Text(spot.country ?: "") },
         leadingContent = {
             if (isFavorite) {
-                Icon(Icons.Default.Star, contentDescription = null, tint = Color.Yellow)
+                Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107))
+            } else {
+                Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
             }
         },
         modifier = Modifier.clickable { onClick() }
     )
+}
+
+@Composable
+fun EmptyState(message: String) {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(64.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }

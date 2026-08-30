@@ -56,7 +56,6 @@ object ForecastDateFormatter {
         val target = sdf.format(date)
         
         val match = now == target
-        android.util.Log.d("ForecastDate", "isToday: target=$target (date=$date), now=$now, tz=${tz.id}, match=$match")
         return match
     }
 

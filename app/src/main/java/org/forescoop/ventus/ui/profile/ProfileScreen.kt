@@ -21,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.forescoop.ventus.R
 import org.forescoop.ventus.VentusApplication
 import org.forescoop.ventus.data.model.User
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
@@ -44,10 +46,10 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Windguru Profile") },
+                title = { Text(stringResource(R.string.profile_title)) },
                 navigationIcon = {
                     TextButton(onClick = onNavigateBack) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )
@@ -75,7 +77,7 @@ fun ProfileScreen(
                 is ProfileUiState.Error -> {
                     Text(text = state.message, color = MaterialTheme.colorScheme.error)
                     Button(onClick = { viewModel.refreshProfile() }, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Retry")
+                        Text(stringResource(R.string.retry))
                     }
                 }
             }
@@ -85,7 +87,7 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileContent(user: User, onLogout: () -> Unit) {
-    Text("Account", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.account), style = MaterialTheme.typography.titleMedium)
     Spacer(modifier = Modifier.height(8.dp))
     
     Card(
@@ -114,12 +116,12 @@ fun ProfileContent(user: User, onLogout: () -> Unit) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             
             ProfileRow(label = "Account ID", value = "#${user.idUser}")
-            ProfileRow(label = "Membership", value = if (user.isPro) "Windguru PRO" else "Public")
+            ProfileRow(label = stringResource(R.string.membership), value = if (user.isPro) stringResource(R.string.pro_member) else stringResource(R.string.public_member))
             
             Row(modifier = Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp), tint = Color.Gray)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Ad-free account", style = MaterialTheme.typography.bodyMedium, color = if (user.noAds != 0) Color.Unspecified else Color.Gray)
+                Text(text = stringResource(R.string.ad_free_account), style = MaterialTheme.typography.bodyMedium, color = if (user.noAds != 0) Color.Unspecified else Color.Gray)
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
@@ -132,14 +134,14 @@ fun ProfileContent(user: User, onLogout: () -> Unit) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = Color.Red)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Logout", color = Color.Red)
+                    Text(stringResource(R.string.menu_logout), color = Color.Red)
                 }
             }
         }
     }
 
     Spacer(modifier = Modifier.height(24.dp))
-    Text("Forecast preferences", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.forecast_preferences), style = MaterialTheme.typography.titleMedium)
     Spacer(modifier = Modifier.height(8.dp))
 
     Card(
@@ -147,11 +149,11 @@ fun ProfileContent(user: User, onLogout: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            ProfileRow(label = "Wind", value = user.windUnits?.uppercase() ?: "--")
-            ProfileRow(label = "Temperature", value = user.tempUnits?.uppercase() ?: "--")
-            ProfileRow(label = "Waves", value = user.waveUnits?.uppercase() ?: "--")
-            ProfileRow(label = "Visible hours", value = "${user.viewHoursFrom}:00–${user.viewHoursTo}:00")
-            ProfileRow(label = "Wind ratings", value = user.windRatingLimits.joinToString(", "))
+            ProfileRow(label = stringResource(R.string.wind_speed), value = user.windUnits?.uppercase() ?: "--")
+            ProfileRow(label = stringResource(R.string.temperature), value = user.tempUnits?.uppercase() ?: "--")
+            ProfileRow(label = stringResource(R.string.wave_height), value = user.waveUnits?.uppercase() ?: "--")
+            ProfileRow(label = stringResource(R.string.visible_hours), value = "${user.viewHoursFrom}:00–${user.viewHoursTo}:00")
+            ProfileRow(label = stringResource(R.string.wind_ratings), value = user.windRatingLimits.joinToString(", "))
         }
     }
 }

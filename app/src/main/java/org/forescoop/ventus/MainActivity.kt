@@ -29,19 +29,29 @@ import org.forescoop.ventus.ui.forecast.ForecastGraphScreen
 import org.forescoop.ventus.ui.login.LoginScreen
 import org.forescoop.ventus.ui.profile.ProfileScreen
 import org.forescoop.ventus.domain.repository.WindguruRepository
+import androidx.appcompat.app.AppCompatActivity
 import org.forescoop.ventus.ui.common.LambdaViewModelFactory
+import org.forescoop.ventus.util.LocationTracker
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as VentusApplication
         val analytics = app.analytics
+        val locationTracker = LocationTracker(app)
         enableEdgeToEdge()
         setContent {
             VentusTheme {
                 val navController = rememberNavController()
                 val dashboardViewModel: DashboardViewModel = viewModel(
-                    factory = LambdaViewModelFactory { DashboardViewModel(app, analytics, WindguruRepository(app.windguruService)) }
+                    factory = LambdaViewModelFactory { 
+                        DashboardViewModel(
+                            app, 
+                            analytics, 
+                            WindguruRepository(app.windguruService),
+                            locationTracker
+                        ) 
+                    }
                 )
 
                 LaunchedEffect(navController) {
@@ -116,6 +126,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onLogout = { dashboardViewModel.logout() },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
+                                onCurrentLocationClick = { dashboardViewModel.loadForecastForCurrentLocation() },
                                 isFavorite = success.isFavorite,
                                 isAuthenticated = success.isAuthenticated,
                                 onNavigateBack = {
@@ -189,6 +200,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onLogout = { dashboardViewModel.logout() },
                                 onToggleFavorite = { dashboardViewModel.toggleFavorite() },
+                                onCurrentLocationClick = { dashboardViewModel.loadForecastForCurrentLocation() },
                                 isFavorite = success.isFavorite,
                                 isAuthenticated = success.isAuthenticated,
                                 onNavigateBack = {

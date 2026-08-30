@@ -20,7 +20,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.forescoop.ventus.R
 
 @Composable
 fun VentusTopBar(
@@ -34,6 +36,7 @@ fun VentusTopBar(
     onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onCurrentLocationClick: () -> Unit,
     isFavorite: Boolean,
     isAuthenticated: Boolean
 ) {
@@ -52,7 +55,7 @@ fun VentusTopBar(
                     onClick = { showMenu = true },
                     colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
                 ) {
-                    Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(imageVector = Icons.Default.Menu, contentDescription = stringResource(R.string.menu), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 
                 DropdownMenu(
@@ -61,56 +64,56 @@ fun VentusTopBar(
                 ) {
                     if (currentRoute != "dashboard") {
                         DropdownMenuItem(
-                            text = { Text("Forecast Dashboard") },
+                            text = { Text(stringResource(R.string.menu_dashboard)) },
                             onClick = { showMenu = false; onNavigateToDashboard() },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.ViewQuilt, contentDescription = null) }
                         )
                     }
                     if (currentRoute != "grid") {
                         DropdownMenuItem(
-                            text = { Text("Forecast Grid") },
+                            text = { Text(stringResource(R.string.menu_grid)) },
                             onClick = { showMenu = false; onNavigateToGrid() },
                             leadingIcon = { Icon(Icons.Default.TableChart, contentDescription = null) }
                         )
                     }
                     if (currentRoute != "graph") {
                         DropdownMenuItem(
-                            text = { Text("Forecast Graph") },
+                            text = { Text(stringResource(R.string.menu_graph)) },
                             onClick = { showMenu = false; onNavigateToGraph() },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }
                         )
                     }
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("Settings") },
+                        text = { Text(stringResource(R.string.menu_settings)) },
                         onClick = { showMenu = false; onNavigateToSettings() },
                         leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) }
                     )
                     DropdownMenuItem(
-                        text = { Text("Help") },
+                        text = { Text(stringResource(R.string.menu_help)) },
                         onClick = { showMenu = false },
                         leadingIcon = { Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = null) }
                     )
                     DropdownMenuItem(
-                        text = { Text("About") },
+                        text = { Text(stringResource(R.string.menu_about)) },
                         onClick = { showMenu = false },
                         leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) }
                     )
                     HorizontalDivider()
                     if (isAuthenticated) {
                         DropdownMenuItem(
-                            text = { Text("Profile") },
+                            text = { Text(stringResource(R.string.menu_profile)) },
                             onClick = { showMenu = false; onNavigateToProfile() },
                             leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
                         )
                         DropdownMenuItem(
-                            text = { Text("Logout", color = Color.Red) },
+                            text = { Text(stringResource(R.string.menu_logout), color = Color.Red) },
                             onClick = { showMenu = false; onLogout() },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = Color.Red) }
                         )
                     } else {
                         DropdownMenuItem(
-                            text = { Text("Login") },
+                            text = { Text(stringResource(R.string.menu_login)) },
                             onClick = { showMenu = false; onNavigateToLogin() },
                             leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) }
                         )
@@ -122,7 +125,14 @@ fun VentusTopBar(
                 onClick = onNavigateToSearch,
                 colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
             ) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(imageVector = Icons.Default.Search, contentDescription = stringResource(R.string.search_placeholder), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            IconButton(
+                onClick = onCurrentLocationClick,
+                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+            ) {
+                Icon(imageVector = Icons.Default.MyLocation, contentDescription = stringResource(R.string.current_location), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             IconButton(
@@ -131,7 +141,7 @@ fun VentusTopBar(
             ) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                    contentDescription = "Favorite",
+                    contentDescription = stringResource(R.string.favorite),
                     tint = if (isFavorite) Color.Yellow else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

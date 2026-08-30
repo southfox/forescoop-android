@@ -89,38 +89,25 @@ class SpotForecast(
 
     fun weatherSymbolNames(hour: String?): List<String> {
         val precipitation = forecast?.precipitation(hour) ?: forecast?.precipitation1(hour) ?: 0.0
-        val modelTemperature = forecast?.temperature(hour) ?: forecast?.temperatureReal(hour) ?: 0.0
         val phaseTemperature = forecast?.temperatureReal(hour) ?: forecast?.temperature(hour) ?: 0.0
         val cloudCover = forecast?.cloudCoverTotal(hour) ?: 0
         val humidity = forecast?.relativeHumidity(hour) ?: 0
-        val windSpeed = forecast?.windSpeed(hour) ?: 0.0
-        val windGusts = forecast?.windGustsKnots(hour) ?: 0.0
         val isNight = !isDaylight(forecastDate(hour) ?: Date())
         val symbols = mutableListOf<String>()
 
         val oktas = (cloudCover.toDouble() / 100.0 * 8.0).toInt()
         val isSnow = precipitation > 0 && phaseTemperature <= 0
-        val isHeavyRain = precipitation > 0 && !isSnow && precipitation >= 8
-        val isLightRain = precipitation > 0 && !isSnow && !isHeavyRain
 
         if (isSnow) {
             symbols.add("ac_unit") // snowflake
-        } else if (isHeavyRain) {
-            symbols.add("umbrella") // cloud.heavyrain
-        } else if (isLightRain && oktas <= 2) {
-            symbols.add(if (isNight) "nightlight" else "wb_sunny") // cloud.moon.rain.fill / cloud.sun.rain.fill
-        } else if (isLightRain) {
-            symbols.add(if (precipitation < 2) "water_drop" else "umbrella") // cloud.drizzle / cloud.rain.fill
         } else if (humidity >= 95 && cloudCover >= 80) {
             symbols.add("foggy") // cloud.fog
         } else if (oktas <= 2) {
-            symbols.add(if (isNight) "nightlight" else if (modelTemperature >= 30) "wb_sunny" else "wb_sunny")
+            symbols.add(if (isNight) "nightlight" else "wb_sunny")
         } else if (oktas <= 4) {
             symbols.add(if (isNight) "nightlight" else "wb_cloudy")
-        } else if (oktas <= 7) {
-            symbols.add("cloud")
         } else {
-            symbols.add("cloud") // cloud.fill
+            symbols.add("cloud")
         }
         
         return symbols
@@ -199,6 +186,33 @@ class SpotForecast(
                             nextSunsetFound = true
                         }
                     }
+
+                    // Add Moon events
+                    val moonEvents = ForecastMoonCalendar.events(this@SpotForecast, start, end)
+                    for (moonEvent in moonEvents) {
+                        events.add(moonEvent.first to moonEvent.second)
+                    }
+                    
+                    // Add daily Moon Phase event at the start of the day if a day boundary is crossed
+                    val calStart = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT")).apply { time = start }
+                    val calEnd = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT")).apply { time = end }
+                    if (calStart.get(Calendar.DAY_OF_YEAR) != calEnd.get(Calendar.DAY_OF_YEAR)) {
+                        val midnight = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT")).apply {
+                            time = start
+                            add(Calendar.DAY_OF_YEAR, 1)
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }.time
+                        
+                        if (midnight > start && midnight < end) {
+                            val moon = ForecastMoonCalendar.info(this@SpotForecast, midnight)
+                            moon?.let {
+                                events.add(midnight to it.symbolName)
+                            }
+                        }
+                    }
                     
                     events.sortBy { it.first }
                     for (event in events) {
@@ -212,6 +226,38 @@ class SpotForecast(
             }
         }
         return result
+    }
+
+    fun dailyTemperatureRange(hour: String?): Pair<Double, Double>? {
+        val date = forecastDate(hour) ?: return null
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT")).apply {
+            time = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val dayStart = calendar.time
+        
+        val temps = availableForecastHours
+            .mapNotNull { h ->
+                val d = forecastDate(h) ?: return@mapNotNull null
+                val cal = Calendar.getInstance(TimeZone.getTimeZone(tz ?: "GMT")).apply {
+                    time = d
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                if (cal.time == dayStart) {
+                    forecast?.temperatureReal(h) ?: forecast?.temperature(h)
+                } else {
+                    null
+                }
+            }
+        
+        if (temps.isEmpty()) return null
+        return Pair(temps.min(), temps.max())
     }
 
     override fun toString(): String {

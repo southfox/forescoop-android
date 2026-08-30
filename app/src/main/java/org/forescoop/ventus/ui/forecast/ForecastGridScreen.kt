@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -28,12 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import org.forescoop.ventus.R
+import org.forescoop.ventus.data.model.ForecastMoonCalendar
+import org.forescoop.ventus.data.model.ForecastPrecipitationAgreement
 import org.forescoop.ventus.data.model.SpotForecast
+import org.forescoop.ventus.data.model.precipitationAgreement
 import org.forescoop.ventus.ui.common.*
 import java.util.Date
 import java.util.Locale
@@ -48,6 +56,7 @@ sealed class GridHour {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ForecastGridScreen(
     spotForecast: SpotForecast,
@@ -61,10 +70,14 @@ fun ForecastGridScreen(
     onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
     onToggleFavorite: () -> Unit,
+    onCurrentLocationClick: () -> Unit,
     isFavorite: Boolean,
     isAuthenticated: Boolean,
     onNavigateBack: () -> Unit
 ) {
+    val locationPermissionState = rememberPermissionState(
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
+    )
     val hours = remember(spotForecast) {
         val baseHours = spotForecast.availableForecastHours
         spotForecast.insertingDaylightEvents<GridHour>(
@@ -86,6 +99,7 @@ fun ForecastGridScreen(
     val pressureUnit by viewModel.pressureUnit.collectAsState()
     val freezingLevelUnit by viewModel.freezingLevelUnit.collectAsState()
     val waveUnit by viewModel.waveHeightUnit.collectAsState()
+    val isLabelsExpanded by viewModel.isLabelsExpanded.collectAsState()
     val listState = rememberLazyListState()
     
     val hasWaveData = remember(spotForecast) {
@@ -93,7 +107,13 @@ fun ForecastGridScreen(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .forecastAccessibilityContainer(
+                label = ForecastAccessibility.summary(LocalContext.current, spotForecast, null),
+                hint = "",
+                identifier = "forecast_grid_root"
+            ),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -108,6 +128,13 @@ fun ForecastGridScreen(
                 onNavigateToProfile = onNavigateToProfile,
                 onLogout = onLogout,
                 onToggleFavorite = onToggleFavorite,
+                onCurrentLocationClick = {
+                    if (locationPermissionState.status.isGranted) {
+                        onCurrentLocationClick()
+                    } else {
+                        locationPermissionState.launchPermissionRequest()
+                    }
+                },
                 isFavorite = isFavorite,
                 isAuthenticated = isAuthenticated
             )
@@ -132,25 +159,30 @@ fun ForecastGridScreen(
                 // Row Labels (Fixed)
                 Column(
                     modifier = Modifier
-                        .width(150.dp) // Adjusted width for icons + text
+                        .width(if (isLabelsExpanded) 150.dp else 30.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    GridLabel("Hour", isHeader = true)
-                    GridLabel("Wind speed", icon = Icons.Outlined.Air, unit = windUnit.label, onClick = { viewModel.toggleWindUnit() })
-                    GridLabel("Wind gusts", icon = Icons.Outlined.WindPower, unit = windUnit.label, onClick = { viewModel.toggleWindUnit() })
-                    GridLabel("Wind direction", icon = Icons.Outlined.Explore)
-                    GridLabel("Temperature", icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
-                    GridLabel("Real temperature", icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
-                    GridLabel("Wind chill", icon = Icons.Outlined.AcUnit, unit = tempUnit.label, onClick = { viewModel.toggleTempUnit() })
-                    GridLabel("Freezing level", icon = Icons.Outlined.Landscape, unit = freezingLevelUnit.label, onClick = { viewModel.toggleFreezingLevelUnit() })
-                    GridLabel("Cloud cover", icon = Icons.Outlined.Cloud, unit = "%")
-                    GridLabel("Precipitation", icon = Icons.Outlined.BeachAccess, unit = precipUnit.label, onClick = { viewModel.togglePrecipUnit() })
-                    GridLabel("Pressure", icon = Icons.Outlined.Compress, unit = pressureUnit.label, onClick = { viewModel.togglePressureUnit() })
-                    GridLabel("Humidity", icon = Icons.Outlined.WaterDrop, unit = "%")
+                    GridLabel(
+                        text = stringResource(R.string.hour), 
+                        isHeader = true, 
+                        isExpanded = isLabelsExpanded,
+                        onToggleExpand = { viewModel.toggleLabelsExpanded() }
+                    )
+                    GridLabel(stringResource(R.string.wind_speed), icon = Icons.Outlined.Air, unit = windUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleWindUnit() })
+                    GridLabel(stringResource(R.string.wind_gusts), icon = Icons.Outlined.WindPower, unit = windUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleWindUnit() })
+                    GridLabel(stringResource(R.string.wind_direction), icon = Icons.Outlined.Explore, isExpanded = isLabelsExpanded)
+                    GridLabel(stringResource(R.string.temperature), icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel(stringResource(R.string.real_temperature), icon = Icons.Outlined.DeviceThermostat, unit = tempUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel(stringResource(R.string.wind_chill), icon = Icons.Outlined.AcUnit, unit = tempUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleTempUnit() })
+                    GridLabel(stringResource(R.string.freezing_level), icon = Icons.Outlined.Landscape, unit = freezingLevelUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleFreezingLevelUnit() })
+                    GridLabel(stringResource(R.string.cloud_cover), icon = Icons.Outlined.Cloud, unit = "%", isExpanded = isLabelsExpanded)
+                    GridLabel(stringResource(R.string.precipitation), icon = Icons.Outlined.BeachAccess, unit = precipUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.togglePrecipUnit() })
+                    GridLabel(stringResource(R.string.pressure), icon = Icons.Outlined.Compress, unit = pressureUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.togglePressureUnit() })
+                    GridLabel(stringResource(R.string.humidity), icon = Icons.Outlined.WaterDrop, unit = "%", isExpanded = isLabelsExpanded)
                     if (hasWaveData) {
-                        GridLabel("Wave height", icon = Icons.Outlined.Water, unit = waveUnit.label, onClick = { viewModel.toggleWaveUnit() })
-                        GridLabel("Wave period", icon = Icons.Outlined.Timer, unit = "s")
-                        GridLabel("Wave direction", icon = Icons.Outlined.Explore)
+                        GridLabel(stringResource(R.string.wave_height), icon = Icons.Outlined.Water, unit = waveUnit.label, isExpanded = isLabelsExpanded, onClick = { viewModel.toggleWaveUnit() })
+                        GridLabel(stringResource(R.string.wave_period), icon = Icons.Outlined.Timer, unit = "s", isExpanded = isLabelsExpanded)
+                        GridLabel(stringResource(R.string.wave_direction), icon = Icons.Outlined.Explore, isExpanded = isLabelsExpanded)
                     }
                 }
 
@@ -169,42 +201,66 @@ fun ForecastGridScreen(
 }
 
 @Composable
-fun GridLabel(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector? = null, unit: String? = null, isHeader: Boolean = false, onClick: (() -> Unit)? = null) {
+fun GridLabel(
+    text: String, 
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null, 
+    unit: String? = null, 
+    isHeader: Boolean = false, 
+    isExpanded: Boolean = true,
+    onClick: (() -> Unit)? = null,
+    onToggleExpand: (() -> Unit)? = null
+) {
     Box(
         modifier = Modifier
             .height(if (isHeader) 85.dp else 30.dp)
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-            .clickable(enabled = onClick != null) { onClick?.invoke() }
+            .clickable(enabled = onClick != null || onToggleExpand != null) { 
+                if (isHeader && onToggleExpand != null) onToggleExpand()
+                else onClick?.invoke() 
+            }
             .padding(horizontal = 4.dp),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = if (isExpanded) Alignment.CenterStart else Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (icon != null) {
+            if (isHeader) {
                 Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    imageVector = Icons.AutoMirrored.Outlined.ViewSidebar,
+                    contentDescription = "Toggle labels",
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-            }
-            Column {
-                Text(
-                    text = text, 
-                    style = MaterialTheme.typography.bodySmall, 
-                    fontSize = 10.sp, 
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
-                if (unit != null) {
-                    Text(
-                        text = "($unit)", 
-                        style = MaterialTheme.typography.labelSmall, 
-                        fontSize = 8.sp, 
-                        color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        maxLines = 1
+            } else {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
+                    if (isExpanded) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                }
+                if (isExpanded) {
+                    Column {
+                        Text(
+                            text = text, 
+                            style = MaterialTheme.typography.bodySmall, 
+                            fontSize = 10.sp, 
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                        if (unit != null) {
+                            Text(
+                                text = "($unit)", 
+                                style = MaterialTheme.typography.labelSmall, 
+                                fontSize = 8.sp, 
+                                color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                maxLines = 1
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -232,16 +288,26 @@ fun ForecastColumn(
     
     val hasWaveData = forecast.waveHeight("0") != null
 
+    val agreement = remember(spotForecast, gridHour) {
+        if (gridHour is GridHour.Forecast) {
+            spotForecast.forecasts.precipitationAgreement(gridHour.hour)
+        } else null
+    }
+
     Column(modifier = Modifier.width(60.dp)) {
-        val symbol = when (gridHour) {
-            is GridHour.SunEvent -> gridHour.symbolName
-            is GridHour.Forecast -> spotForecast.weatherSymbolName(gridHour.hour)
+        val symbols = mutableListOf<String>()
+        when (gridHour) {
+            is GridHour.SunEvent -> symbols.add(gridHour.symbolName)
+            is GridHour.Forecast -> {
+                symbols.addAll(spotForecast.weatherSymbolNames(gridHour.hour))
+            }
         }
         
         GridHeaderCell(
             day = if (showDay) ForecastDateFormatter.formatDay(date, spotForecast.tz) else null,
             hour = hourLabel,
-            symbol = symbol
+            symbols = symbols.take(3),
+            precipitationAgreement = agreement
         )
         
         // Wind speed
@@ -428,15 +494,21 @@ fun ForecastColumn(
                 }
             }
             DataCell(text = rawWaveD?.let { 
+                val travel = (it + 180.0) % 360.0
                 val arrows = listOf("↑", "↗", "→", "↘", "↓", "↙", "←", "↖")
-                arrows[( ((it + 22.5) / 45.0).toInt() % 8 )]
+                arrows[( ((travel + 22.5) / 45.0).toInt() % 8 )]
             } ?: "--")
         }
     }
 }
 
 @Composable
-fun GridHeaderCell(day: String?, hour: String, symbol: String? = null) {
+fun GridHeaderCell(
+    day: String?, 
+    hour: String, 
+    symbols: List<String> = emptyList(),
+    precipitationAgreement: ForecastPrecipitationAgreement? = null
+) {
     Box(
         modifier = Modifier
             .height(85.dp)
@@ -447,8 +519,8 @@ fun GridHeaderCell(day: String?, hour: String, symbol: String? = null) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.padding(vertical = 4.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(vertical = 2.dp)
         ) {
             Text(
                 text = day ?: " ",
@@ -461,39 +533,87 @@ fun GridHeaderCell(day: String?, hour: String, symbol: String? = null) {
             Text(
                 text = hour,
                 style = MaterialTheme.typography.bodySmall,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                 maxLines = 1
             )
-            
-            if (symbol != null) {
-                if (symbol == "sunrise" || symbol == "sunset") {
-                    Icon(
-                        painter = painterResource(id = if (symbol == "sunrise") R.drawable.ic_sunrise else R.drawable.ic_sunset),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.primary
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            if (precipitationAgreement != null && precipitationAgreement.percentage > 0) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${precipitationAgreement.percentage}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Cyan
                     )
-                } else {
-                    val icon = when (symbol) {
-                        "wb_sunny" -> Icons.Outlined.WbSunny
-                        "wb_cloudy" -> Icons.Outlined.Cloud
-                        "nightlight" -> Icons.Outlined.Nightlight
-                        "cloud" -> Icons.Outlined.Cloud
-                        "ac_unit" -> Icons.Outlined.AcUnit
-                        "umbrella" -> Icons.Outlined.BeachAccess
-                        "water_drop" -> Icons.Outlined.WaterDrop
-                        else -> Icons.Outlined.WbSunny
-                    }
                     Icon(
-                        imageVector = icon,
+                        imageVector = Icons.Outlined.WaterDrop,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        modifier = Modifier.size(9.dp),
+                        tint = Color.Cyan
                     )
                 }
             } else {
-                Spacer(modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+            
+            Row(
+                modifier = Modifier.height(24.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                symbols.forEach { symbol ->
+                    when (symbol) {
+                        "sunrise", "sunset", "moonrise", "moonset",
+                        "moonphase.new.moon", "moonphase.waxing.crescent", "moonphase.first.quarter",
+                        "moonphase.waxing.gibbous", "moonphase.full.moon", "moonphase.waning.gibbous",
+                        "moonphase.last.quarter", "moonphase.waning.crescent" -> {
+                            val iconId = when(symbol) {
+                                "sunrise" -> R.drawable.ic_sunrise
+                                "sunset" -> R.drawable.ic_sunset
+                                "moonrise" -> R.drawable.ic_moonrise
+                                "moonset" -> R.drawable.ic_moonset
+                                "moonphase.new.moon" -> R.drawable.ic_moon_new
+                                "moonphase.waxing.crescent" -> R.drawable.ic_moon_waxing_crescent
+                                "moonphase.first.quarter" -> R.drawable.ic_moon_first_quarter
+                                "moonphase.waxing.gibbous" -> R.drawable.ic_moon_waxing_gibbous
+                                "moonphase.full.moon" -> R.drawable.ic_moon_full
+                                "moonphase.waning.gibbous" -> R.drawable.ic_moon_waning_gibbous
+                                "moonphase.last.quarter" -> R.drawable.ic_moon_last_quarter
+                                "moonphase.waning.crescent" -> R.drawable.ic_moon_waning_crescent
+                                else -> R.drawable.ic_moonrise
+                            }
+                            Icon(
+                                painter = painterResource(id = iconId),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (symbol.startsWith("moon")) Color(0xFF3F51B5) else MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        else -> {
+                            val icon = when (symbol) {
+                                "wb_sunny" -> Icons.Outlined.WbSunny
+                                "wb_cloudy" -> Icons.Outlined.Cloud
+                                "nightlight" -> Icons.Outlined.Nightlight
+                                "cloud" -> Icons.Outlined.Cloud
+                                "ac_unit" -> Icons.Outlined.AcUnit
+                                "umbrella" -> Icons.Outlined.BeachAccess
+                                "water_drop" -> Icons.Outlined.WaterDrop
+                                else -> Icons.Outlined.WbSunny
+                            }
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

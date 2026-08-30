@@ -3,8 +3,8 @@
 //  install-testapp.swift
 //  Ventus (forescoop-android)
 //
-//  Bumps the build number (versionCode), builds an APK with Gradle, and
-//  installs it on a connected Android phone (USB debugging) for testing.
+//  Bumps the build number (versionCode), builds an APK with Gradle, but
+//  no install.
 //
 //  versionName (e.g. "1.0.1") is the human-facing release version and is
 //  only ever changed by hand in app/build.gradle.kts. versionCode is the
@@ -14,7 +14,7 @@
 //    ./install-testapp.swift                       # bump build number, build debug APK, install
 //    ./install-testapp.swift --release              # build a release APK instead of debug
 //    ./install-testapp.swift --apk app/build/outputs/apk/debug/app-debug.apk   # skip build, just install
-//    ./install-testapp.swift --no-install            # build only, don't push to a device
+//    ./install-testapp.swift --install            # build only, and push to a device connected with USB
 //    ./install-testapp.swift --no-bump               # skip the build-number bump
 //
 
@@ -42,11 +42,33 @@ func step(_ message: String) {
 }
 
 @discardableResult
-func run(_ launchPath: String, _ arguments: [String], cwd: String? = nil) -> Int32 {
+func run(_ launchPath: String, _ arguments: [String], cwd: String? = nil, env: [String: String]? = nil) -> Int32 {
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: launchPath)
-    process.arguments = arguments
+    // Use /bin/bash to run gradlew to ensure environment and shebang are handled correctly
+    if launchPath.hasSuffix("gradlew") {
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
+        process.arguments = [launchPath] + arguments
+    } else {
+        process.executableURL = URL(fileURLWithPath: launchPath)
+        process.arguments = arguments
+    }
+
     if let cwd { process.currentDirectoryURL = URL(fileURLWithPath: cwd) }
+
+    var environment = ProcessInfo.processInfo.environment
+    if let env {
+        for (key, value) in env {
+            environment[key] = value
+        }
+    }
+    // Ensure we have a valid home for Android tools to avoid AndroidLocationsBuildService failures.
+    // We try to use the current HOME or a temporary directory if it fails.
+    if environment["ANDROID_USER_HOME"] == nil {
+        let home = environment["HOME"] ?? "/tmp"
+        environment["ANDROID_USER_HOME"] = "\(home)/.android"
+    }
+    process.environment = environment
+
     process.standardOutput = FileHandle.standardOutput
     process.standardError = FileHandle.standardError
     do {
@@ -81,7 +103,7 @@ let fileManager = FileManager.default
 
 var explicitAPKPath: String? = nil
 var buildRelease = false
-var shouldInstall = true
+var shouldInstall = false
 var shouldBump = true
 
 let arguments = Array(CommandLine.arguments.dropFirst())
@@ -94,8 +116,8 @@ while index < arguments.count {
         explicitAPKPath = arguments[index]
     case "--release":
         buildRelease = true
-    case "--no-install":
-        shouldInstall = false
+    case "--install":
+        shouldInstall = true
     case "--no-bump":
         shouldBump = false
     default:
@@ -116,6 +138,16 @@ func readVersionName() -> String? {
     let match = String(contents[versionNameRange])
     guard let quotedRange = match.range(of: #""([^"]*)""#, options: .regularExpression) else { return nil }
     return match[quotedRange].trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+}
+
+func readVersionCode() -> Int? {
+    guard let contents = try? String(contentsOfFile: appBuildGradle, encoding: .utf8),
+          let versionCodeRange = contents.range(of: #"versionCode\s*=\s*(\d+)"#, options: .regularExpression) else {
+        return nil
+    }
+    let match = String(contents[versionCodeRange])
+    guard let digitsRange = match.range(of: #"\d+"#, options: .regularExpression) else { return nil }
+    return Int(match[digitsRange])
 }
 
 var apkPath: String
@@ -152,23 +184,44 @@ if let explicitAPKPath {
     }
 
     // 2. Build
-    let gradleTask = buildRelease ? "assembleRelease" : "assembleDebug"
+    let gradleTask = buildRelease ? ":app:assembleRelease" : ":app:assembleDebug"
     step("Building APK (\(gradleTask))")
-    let buildStatus = run(gradlew, [gradleTask], cwd: projectDir)
+    let buildStatus = run(gradlew, [gradleTask], cwd: projectDir, env: ["ANDROID_HOME": androidHome, "ANDROID_SDK_ROOT": androidHome])
     guard buildStatus == 0 else { fail("./gradlew \(gradleTask) failed (status \(buildStatus))") }
 
     let variantDir = buildRelease ? "release" : "debug"
     let outputsDir = "\(projectDir)/app/build/outputs/apk/\(variantDir)"
-    guard let apkName = (try? fileManager.contentsOfDirectory(atPath: outputsDir))?.first(where: { $0.hasSuffix(".apk") }) else {
+
+    // Check for APK in the variant directory, including possible subdirectories (flavors)
+    func findAPK(in dir: String) -> String? {
+        let contents = (try? fileManager.contentsOfDirectory(atPath: dir)) ?? []
+        // Look for .apk files in the current dir
+        if let apk = contents.first(where: { $0.hasSuffix(".apk") && !$0.contains("-unsigned") }) {
+            return "\(dir)/\(apk)"
+        }
+        // Look in subdirectories (flavors)
+        for item in contents {
+            var isDir: ObjCBool = false
+            let path = "\(dir)/\(item)"
+            if fileManager.fileExists(atPath: path, isDirectory: &isDir), isDir.boolValue {
+                if let apk = findAPK(in: path) {
+                    return apk
+                }
+            }
+        }
+        return nil
+    }
+
+    guard let foundAPK = findAPK(in: outputsDir) else {
         fail("No .apk found in \(outputsDir) after build")
     }
-    apkPath = "\(outputsDir)/\(apkName)"
+    apkPath = foundAPK
 }
 
-// Copy to a friendly, version-labeled name (e.g. "Ventus 1.0.1.apk") at the
+// Copy to a friendly, version-labeled name (e.g. "Ventus 1.0.1 (42).apk") at the
 // project root so it's easy to find and attach to an email.
-if let versionName = readVersionName() {
-    let friendlyPath = "\(projectDir)/Ventus \(versionName).apk"
+if let versionName = readVersionName(), let versionCode = readVersionCode() {
+    let friendlyPath = "\(projectDir)/Ventus \(versionName) (\(versionCode)).apk"
     try? fileManager.removeItem(atPath: friendlyPath)
     do {
         try fileManager.copyItem(atPath: apkPath, toPath: friendlyPath)
@@ -181,12 +234,12 @@ if let versionName = readVersionName() {
 print("APK: \(apkPath)")
 
 guard shouldInstall else {
-    print("\n✅ Built \(apkPath). Skipping install (--no-install).")
+    print("\n✅ Built \(apkPath). Skipping install (--install).")
     exit(0)
 }
 
 guard fileManager.fileExists(atPath: adbPath) else {
-    fail("adb not found at \(adbPath). Set ANDROID_HOME/ANDROID_SDK_ROOT or pass --no-install.")
+    fail("adb not found at \(adbPath). Set ANDROID_HOME/ANDROID_SDK_ROOT or pass --install.")
 }
 
 // 3. Check for a connected device

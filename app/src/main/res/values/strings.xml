@@ -1,3 +1,146 @@
 <resources>
     <string name="app_name">Ventus</string>
+    <string name="settings_title">Settings</string>
+    <string name="done">Done</string>
+    <string name="forecast_hours">Forecast hours</string>
+    <string name="every_x_hours">Every %1$d hours</string>
+    <string name="forecast_hours_footer">How many hours apart forecast columns and hour pickers are, across the app and other devices.</string>
+    <string name="animations">Animations</string>
+    <string name="weather_background">Weather background</string>
+    <string name="appearance">Appearance</string>
+    <string name="appearance_footer">System follows this device\'s Light or Dark appearance setting.</string>
+    <string name="theme">Theme</string>
+    <string name="theme_footer">Themes change colors and font design without changing text sizes. System Default follows the current device appearance.</string>
+    <string name="language">Language</string>
+    <string name="language_footer">System follows the device\'s language. Choosing a language overrides it for Ventus only.</string>
+    <string name="notifications">Notifications</string>
+    <string name="severe_weather_alerts">Severe weather alerts</string>
+    <string name="forecast_alerts">Forecast Alerts</string>
+    <string name="notifications_footer">Get notified about heavy snow, extreme cold, or extreme heat forecast near your selected location, or set up your own push alerts for specific spots, models, and conditions.</string>
+    <string name="units">Units</string>
+    <string name="wind_speed">Wind speed</string>
+    <string name="wind_gusts">Wind gusts</string>
+    <string name="wind_direction">Wind direction</string>
+    <string name="temperature">Temperature</string>
+    <string name="real_temperature">Real temperature</string>
+    <string name="wind_chill">Wind chill</string>
+    <string name="freezing_level">Freezing level</string>
+    <string name="cloud_cover">Cloud cover</string>
+    <string name="precipitation">Precipitation</string>
+    <string name="pressure">Pressure</string>
+    <string name="humidity">Humidity</string>
+    <string name="wave_height">Wave height</string>
+    <string name="wave_period">Wave period</string>
+    <string name="wave_direction">Wave direction</string>
+    <string name="hour">Hour</string>
+
+    <string name="wind_section">Wind</string>
+    <string name="weather_section">Weather</string>
+    <string name="forecast_insight">Forecast Insight</string>
+
+    <string name="moon_new">New Moon</string>
+    <string name="moon_waxing_crescent">Waxing Crescent</string>
+    <string name="moon_first_quarter">First Quarter</string>
+    <string name="moon_waxing_gibbous">Waxing Gibbous</string>
+    <string name="moon_full">Full Moon</string>
+    <string name="moon_waning_gibbous">Waning Gibbous</string>
+    <string name="moon_last_quarter">Last Quarter</string>
+    <string name="moon_waning_crescent">Waning Crescent</string>
+
+    <string name="summary_real_temp">real, altitude-corrected reading</string>
+    <string name="summary_model_temp">model reading, no altitude correction available</string>
+    <string name="summary_gusting">gusting to %1$s</string>
+    <string name="summary_cloud_cover">%1$d%% cloud cover</string>
+    <string name="summary_humidity">%1$d%% humidity</string>
+    <string name="summary_rain">%1$s of %2$s</string>
+    <string name="summary_freezing_level">freezing level at %1$s</string>
+    <string name="summary_pressure">pressure %1$s</string>
+    <string name="summary_waves">%1$s waves</string>
+    <string name="summary_temp_with_wind">%1$s with %2$s wind</string>
+    <string name="summary_expect">For %1$s, expect %2$s.</string>
+    <string name="summary_strong_wind">strong wind expected, up to %1$s (Beaufort %2$d) around %3$s</string>
+    <string name="summary_very_cold">very cold, dropping to %1$s around %2$s</string>
+    <string name="summary_very_hot">very hot, reaching %1$s around %2$s</string>
+    <string name="summary_precip_expected">%1$s of %2$s expected, starting around %3$s</string>
+    <string name="summary_precip_expected_simple">%1$s of %2$s expected</string>
+    <string name="summary_large_swell">large swell expected, up to %1$s around %2$s</string>
+    <string name="summary_no_hazards">No notable hazards ahead — a generally quiet stretch: %1$s.</string>
+
+    <string name="wind_and_chill_title">Wind &amp; Chill</string>
+    <string name="sea_and_swell_title">Sea &amp; Swell</string>
+    <string name="ice_hazard_title">Ice Hazard</string>
+    <string name="unsettled_outlook_title">Unsettled Outlook</string>
+    <string name="cold_snap_title">Cold Snap</string>
+    <string name="heat_title">Heat</string>
+    <string name="key_trends_title">Key Trends &amp; Impact</string>
+
+    <string name="chill_note">Winds at that strength can make it feel noticeably colder than the air temperature alone suggests.</string>
+    <string name="ice_risk_body">Wet surfaces from rain, combined with a low of %1$s around %2$s, can refreeze into ice on exposed paths and roads overnight.</string>
+    <string name="unsettled_body">%1$d of the next %2$d days bring %3$s, so expect a wet, changeable stretch rather than a single passing system.</string>
+    <string name="cold_snap_body">Overnight lows drop to around %1$s on %2$s — dress for a sharp chill after dark.</string>
+    <string name="heat_body">Highs climb to around %1$s on %2$s, well above the rest of the outlook.</string>
+
+    <string name="today">today</string>
+    <string name="rain">rain</string>
+    <string name="snow">snow</string>
+    <string name="rain_or_snow">rain or snow</string>
+    <string name="overcast">overcast</string>
+    <string name="partly_cloudy">partly cloudy</string>
+    <string name="clear">clear</string>
+    <string name="fog">fog</string>
+
+    <string name="profile_title">Windguru Profile</string>
+    <string name="cancel">Cancel</string>
+    <string name="retry">Retry</string>
+    <string name="account">Account</string>
+    <string name="membership">Membership</string>
+    <string name="pro_member">Windguru PRO</string>
+    <string name="public_member">Public</string>
+    <string name="ad_free_account">Ad-free account</string>
+    <string name="forecast_preferences">Forecast preferences</string>
+    <string name="visible_hours">Visible hours</string>
+    <string name="wind_ratings">Wind ratings</string>
+
+    <string name="system">System</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+
+    <string name="none">None</string>
+    <string name="native_anim">Native</string>
+    <string name="metal">Metal</string>
+    <string name="spritekit">SpriteKit</string>
+
+    <string name="liquid_glass">Liquid Glass</string>
+    <string name="ocean">Ocean</string>
+    <string name="forest">Forest</string>
+    <string name="sunset">Sunset</string>
+    <string name="arctic">Arctic</string>
+    <string name="lavender">Lavender</string>
+    <string name="desert">Desert</string>
+
+    <string name="menu_dashboard">Forecast Dashboard</string>
+    <string name="menu_grid">Forecast Grid</string>
+    <string name="menu_graph">Forecast Graph</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_help">Help</string>
+    <string name="menu_about">About</string>
+    <string name="menu_profile">Profile</string>
+    <string name="menu_logout">Logout</string>
+    <string name="menu_login">Login</string>
+
+    <string name="search_placeholder">Search spots…</string>
+    <string name="favorites_header">Favorites</string>
+    <string name="spots_header">Spots</string>
+    <string name="no_spots_found">No spots found</string>
+    <string name="enter_city_or_spot">Enter a city or spot</string>
+    <string name="current_location">Current Location</string>
+    <string name="favorite">Favorite</string>
+    <string name="menu">Menu</string>
+    <string name="previous_hour">Previous Hour</string>
+    <string name="next_hour">Next Hour</string>
+
+    <string name="accessibility_temp_label">temperature %1$d degrees Celsius</string>
+    <string name="accessibility_wind_label">wind %1$d knots</string>
+    <string name="accessibility_rain_label">rain %1$.1f millimeters</string>
+    <string name="accessibility_detail_row_template">%1$s: %2$s</string>
 </resources>
