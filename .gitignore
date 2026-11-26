@@ -37,3 +37,4 @@ google-services.json
 # Keep the wrapper jar out until it's been generated/verified locally —
 # see README.md for how to materialize it.
 gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
