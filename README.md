@@ -1,7 +1,7 @@
 # Ventus for Android
 
 Android port of the Ventus/Forescoop weather app (the Swift/SwiftUI original
-lives at `https://github.com/patagonia2019/forescoop`). This is a **separate project** in its own
+lives at https://github.com/southfox/ventus). This is a **separate project** in its own
 directory/git history, started fresh rather than mixed into the Swift
 package.
 
@@ -20,28 +20,38 @@ The project now includes Home Screen Widgets and a custom Graph View.
     - Retrofit + Gson for networking
     - Android DataStore for local persistence
 
-## One-time setup
+## Build and checks
 
-The Gradle wrapper jar (`gradle/wrapper/gradle-wrapper.jar`) is **not**
-included — it's a binary I can't safely hand-author or verify without a
-network connection. To materialize it:
+Open the project in Android Studio or install JDK 17 and Android SDK 35, then run:
 
-- **Easiest:** open this folder in Android Studio (`File > Open`). Android
-  Studio bundles its own Gradle/JDK and will offer to generate/repair the
-  wrapper automatically on first sync.
-- **Or, from a terminal**, if you have Gradle installed locally (e.g. via
-  Homebrew or SDKMAN):
-  ```
-  cd forescoop-android
-  gradle wrapper --gradle-version 8.10.2
-  ```
-  This regenerates `gradlew`, `gradlew.bat`, and the wrapper jar to match
-  `gradle-wrapper.properties`.
+```sh
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
 
-No launcher icon resources are included yet either (kept the scaffold
-buildable without needing generated PNG/adaptive-icon assets) — Android
-Studio's Asset Studio (`New > Image Asset`) is the easiest way to add real
-ones later.
+The checked-in Gradle wrapper downloads the configured Gradle version. CI runs
+unit tests and lint on pull requests targeting `dev` or `main`, pushes to those
+branches, and manual runs. The lint baseline records existing findings; new lint
+errors fail CI. Reduce the baseline as existing issues are fixed. Instrumented
+tests need an emulator or device and are not currently run in CI.
+
+## Download a test build
+
+After checks pass, the **Android CI** workflow builds a debug APK. Open the
+workflow run on GitHub Actions and download the `ventus-android-debug-apk`
+artifact from its summary, unzip it, and install the APK on an Android device
+(Android 8.0 or newer). GitHub sign-in and repository read access are required;
+artifacts expire after 14 days. Standard GitHub-hosted runners are free for
+public repositories. Reports are also retained for 14 days.
+
+These builds use a temporary debug signing key. Different runs may have different
+keys, so installing an update can require uninstalling the previous build and
+losing its local data. They are for testing, not Play Store distribution.
+
+For a TestFlight-like tester experience, [Firebase App Distribution](https://firebase.google.com/products/app-distribution)
+is a no-cost option with tester invitations and a web console. Create a Firebase
+project and register `org.forescoop.ventus`, establish a securely stored stable
+signing key, and configure authenticated CI uploads and tester groups before
+automating distribution. Until then the Actions APK is the available web download.
 
 ## Planned steps (roughly in order)
 
