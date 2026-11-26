@@ -25,7 +25,7 @@ import org.forescoop.ventus.data.model.SpotForecast
 import java.util.Date
 
 @Composable
-fun ForecastDaylightSummary(forecast: SpotForecast, modifier: Modifier = Modifier) {
+fun ForecastDaylightSummary(forecast: SpotForecast, selectedHour: String? = null, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val sunrise = forecast.sunrise
     val sunset = forecast.sunset
@@ -49,7 +49,7 @@ fun ForecastDaylightSummary(forecast: SpotForecast, modifier: Modifier = Modifie
                 DaylightLabel(text = sunset, iconId = R.drawable.ic_sunset)
             }
 
-            ForecastMoonCalendar.info(forecast, Date())?.let { moon ->
+            ForecastMoonCalendar.info(forecast, forecast.forecastDate(selectedHour) ?: Date())?.let { moon ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),

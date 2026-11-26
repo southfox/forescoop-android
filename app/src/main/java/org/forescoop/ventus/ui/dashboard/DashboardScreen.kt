@@ -133,7 +133,7 @@ fun DashboardScreen(
                             onHourSelected = { viewModel.selectHour(it) }
                         )
                         
-                        ForecastDaylightSummary(forecast = state.spotForecast)
+                        ForecastDaylightSummary(forecast = state.spotForecast, selectedHour = state.selectedHour)
                         
                         DashboardContent(
                             spotForecast = state.spotForecast, 
